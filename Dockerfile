@@ -3,6 +3,10 @@
 FROM python:3.7-slim
 MAINTAINER m1ndgames <m1nd@ai-arena.net>
 
+# Set build Arguments
+ARG CLIENTID=000
+ARG APITOKEN=000
+
 USER root
 WORKDIR /root/
 
@@ -59,6 +63,17 @@ USER aiarena
 
 # Download the aiarena client
 RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
+
+# Move the config
+RUN mv aiarena-client/default_config.py aiarena-client/config.py
+
+RUN echo $APITOKEN
+
+# Change the Client ID
+RUN sed -i 's/aiarenaclient_000/$CLIENTID/g' aiarena-client/config.py
+
+# Change the API Token
+RUN sed -i 's/\?\?\?/$APITOKEN/g' aiarena-client/config.py
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
