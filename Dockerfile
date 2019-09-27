@@ -88,4 +88,4 @@ RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
 # Remove the Maps that come with the SC2 client
 RUN rm -Rf /home/aiarena/StarCraftII/maps/*
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "python3 /home/aiarena/aiarena-client/aiarena-client.py" ]
