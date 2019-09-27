@@ -13,6 +13,7 @@ RUN apt-get update && apt-get upgrade --assume-yes --quiet=2
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     git  \
     make \
+    gcc \
     tree \
     unzip \
     wget \
