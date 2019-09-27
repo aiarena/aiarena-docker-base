@@ -17,7 +17,9 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     tree \
     unzip \
     wget \
-    gpg
+    gpg \
+    python-dev \
+    apt-transport-https
 
 # Add the microsoft repo for dotnetcore
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
@@ -35,7 +37,6 @@ RUN mkdir -p /usr/share/man/man1
 
 # Install software via APT
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
-    apt-transport-https \
     openjdk-11-jdk \
     wine \
     dotnet-sdk-3.0
@@ -57,7 +58,7 @@ WORKDIR /home/aiarena/
 USER aiarena
 
 # Download the aiarena client
-RUN wget http://dl.ai-arena.net/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
+RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
