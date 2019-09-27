@@ -67,13 +67,15 @@ RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-clie
 # Move the config
 RUN mv aiarena-client/default_config.py aiarena-client/config.py
 
-RUN echo $APITOKEN
-
 # Change the Client ID
 RUN sed -i 's/aiarenaclient_000/$CLIENTID/g' aiarena-client/config.py
 
 # Change the API Token
-RUN sed -i 's/\?\?\?/$APITOKEN/g' aiarena-client/config.py
+RUN sed -i 's/12345/$APITOKEN/g' aiarena-client/config.py
+
+# Keep the client running
+RUN sed -i 's/SHUT_DOWN_AFTER_RUN = True/SHUT_DOWN_AFTER_RUN = False/g' aiarena-client/config.py
+RUN sed -i 's/ROUNDS_PER_RUN = 5/ROUNDS_PER_RUN = 10000/g' aiarena-client/config.py
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
