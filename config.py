@@ -1,0 +1,5 @@
+ARENA_CLIENT_ID = "docker-username"
+API_TOKEN = "12345"
+SHUT_DOWN_AFTER_RUN = False
+ROUNDS_PER_RUN = 10000
+

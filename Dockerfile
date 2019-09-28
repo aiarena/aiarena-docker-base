@@ -3,10 +3,6 @@
 FROM python:3.7-slim
 MAINTAINER m1ndgames <m1nd@ai-arena.net>
 
-# Set build Arguments
-ARG CLIENTID=000
-ARG APITOKEN=000
-
 USER root
 WORKDIR /root/
 
@@ -23,6 +19,8 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     wget \
     gpg \
     python-dev \
+    procps \
+    lsof \
     apt-transport-https
 
 # Add the microsoft repo for dotnetcore
@@ -60,22 +58,13 @@ RUN pip3 install -r bot-requirements.txt
 RUN useradd -ms /bin/bash aiarena
 WORKDIR /home/aiarena/
 USER aiarena
+ENV PATH $PATH
 
 # Download the aiarena client
 RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
-# Move the config
-RUN mv aiarena-client/default_config.py aiarena-client/config.py
-
-# Change the Client ID
-RUN sed -i 's/aiarenaclient_000/$CLIENTID/g' aiarena-client/config.py
-
-# Change the API Token
-RUN sed -i 's/12345/$APITOKEN/g' aiarena-client/config.py
-
-# Keep the client running
-RUN sed -i 's/SHUT_DOWN_AFTER_RUN = True/SHUT_DOWN_AFTER_RUN = False/g' aiarena-client/config.py
-RUN sed -i 's/ROUNDS_PER_RUN = 5/ROUNDS_PER_RUN = 10000/g' aiarena-client/config.py
+# Copy the config file
+COPY config.py /home/aiarena/aiarena-client/config.py
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
@@ -88,4 +77,4 @@ RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
 # Remove the Maps that come with the SC2 client
 RUN rm -Rf /home/aiarena/StarCraftII/maps/*
 
-ENTRYPOINT [ "python3 /home/aiarena/aiarena-client/aiarena-client.py" ]
+ENTRYPOINT [ "/usr/local/bin/python3.7", "/home/aiarena/aiarena-client/aiarena-client.py" ]
