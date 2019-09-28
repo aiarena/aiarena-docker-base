@@ -1,5 +1,13 @@
 # aiarena-docker
 
-build/run the container with their variables set:
+change the client and api token in the config.py
 
-docker build --build-arg CLIENTID=client-ID --build-arg APITOKEN=API-token .
+
+build the container:
+
+docker build  .
+
+
+run the container:
+
+docker run --cap-add=SYS_PTRACE container-ID
