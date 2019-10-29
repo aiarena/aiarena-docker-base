@@ -51,8 +51,8 @@ RUN wget https://gitlab.com/aiarena/aiarena-client/raw/master/requirements.txt -
 RUN wget https://gitlab.com/aiarena/aiarena-client-provisioning/raw/master/aiarena-vm/templates/python-requirements.txt.j2 -O bot-requirements.txt
 
 # Install python modules
-RUN pip3 install -r client-requirements.txt
-RUN pip3 install -r bot-requirements.txt
+RUN pip3.7 install -r client-requirements.txt
+RUN pip3.7 install -r bot-requirements.txt
 
 # Create aiarena user and change workdir/user
 RUN useradd -ms /bin/bash aiarena
@@ -64,7 +64,7 @@ ENV PATH $PATH
 RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
 # Copy the config file
-COPY config.py /home/aiarena/aiarena-client/config.py
+COPY ./config.py /home/aiarena/aiarena-client/config.py
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
@@ -77,4 +77,8 @@ RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
 # Remove the Maps that come with the SC2 client
 RUN rm -Rf /home/aiarena/StarCraftII/maps/*
 
-ENTRYPOINT [ "/usr/local/bin/python3.7", "/home/aiarena/aiarena-client/aiarena-client.py" ]
+WORKDIR /home/aiarena/aiarena-client
+
+ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
+
+ENTRYPOINT [ "/usr/local/bin/python3.7", "-m", "arenaclient" ]
