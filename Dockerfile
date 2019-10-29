@@ -60,12 +60,6 @@ WORKDIR /home/aiarena/
 USER aiarena
 ENV PATH $PATH
 
-# Download the aiarena client
-RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
-
-# Copy the config file
-COPY ./config.py /home/aiarena/aiarena-client/config.py
-
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
     && unzip -P iagreetotheeula SC2.4.10.zip \
@@ -76,6 +70,12 @@ RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
 
 # Remove the Maps that come with the SC2 client
 RUN rm -Rf /home/aiarena/StarCraftII/maps/*
+
+# Download the aiarena client
+RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
+
+# Copy the config file
+COPY ./config.py /home/aiarena/aiarena-client/config.py
 
 WORKDIR /home/aiarena/aiarena-client
 
