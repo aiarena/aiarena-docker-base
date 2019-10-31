@@ -41,7 +41,7 @@ RUN mkdir -p /usr/share/man/man1
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     openjdk-11-jdk \
     wine \
-    dotnet-sdk-3.0
+    dotnet-sdk-2.2
 
 # Upgrade pip and install pip-install requirements
 RUN python3 -m pip install --upgrade pip pipenv
