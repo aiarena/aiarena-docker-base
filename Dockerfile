@@ -132,4 +132,4 @@ ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenac
 WORKDIR /home/aiarena/aiarena-client/arenaclient
 
 # Run the match runner gui
-ENTRYPOINT [ "python3.7", "-m arenaclient", "-f" ]
+ENTRYPOINT [ "python3.7", "-m", "arenaclient", "-f" ]
