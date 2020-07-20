@@ -58,8 +58,8 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
 RUN python3 -m pip install --upgrade pip pipenv
 
 # Download python requirements files
-RUN wget https://gitlab.com/aiarena/aiarena-client/raw/master/requirements.linux.txt -O client-requirements.txt
-RUN wget https://gitlab.com/aiarena/aiarena-client-provisioning/raw/master/aiarena-vm/templates/python-requirements.txt.j2 -O bot-requirements.txt
+COPY cache/requirements.linux.txt client-requirements.txt
+COPY cache/bot-requirements.txt bot-requirements.txt
 
 # Install python modules
 RUN pip3.7 install -r client-requirements.txt
@@ -74,15 +74,16 @@ ENV PATH $PATH
 # Copy the run file
 COPY run.sh /home/aiarena/run.sh
 
-# Download the aiarena client
-RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
+# Copy the aiarena client
+COPY cache/aiarena-client.zip /home/aiarena/
+RUN unzip aiarena-client.zip && rm aiarena-client.zip
 
 # Copy the config file
 COPY example_config.py /home/aiarena/aiarena-client/arenaclient/config.py
 
-# Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
-RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
-    && unzip -P iagreetotheeula SC2.4.10.zip \
+# Copy and uncompress StarCraftII and remove zip file
+COPY cache/SC2.4.10.zip /home/aiarena/SC2.4.10.zip
+RUN unzip -P iagreetotheeula SC2.4.10.zip \
     && rm SC2.4.10.zip
 
 # Create a symlink for the maps directory
@@ -91,13 +92,13 @@ RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
 # Remove the Maps that come with the SC2 client
 RUN rm -Rf /home/aiarena/StarCraftII/maps/*
 
-# Download and install the Map Pack
-RUN wget -q 'http://blzdistsc2-a.akamaihd.net/MapPacks/Ladder2019Season3.zip' \
-    && unzip -P iagreetotheeula Ladder2019Season3.zip \
-    && rm Ladder2019Season3.zip
+# Copy and install the Map Pack
+COPY cache/maps.zip /home/aiarena/maps.zip
+RUN unzip maps.zip \
+    && rm maps.zip
 
-RUN mv Ladder2019Season3 /home/aiarena/StarCraftII/Maps
-RUN cp /home/aiarena/StarCraftII/Maps/Ladder2019Season3/* /home/aiarena/StarCraftII/Maps
+RUN cp /home/aiarena/maps/* /home/aiarena/StarCraftII/Maps
+RUN rm -Rf maps
 
 # Create Bot and Replay directories
 RUN mkdir -p /home/aiarena/StarCraftII/Bots
@@ -126,9 +127,9 @@ USER aiarena
 ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
 
 # Setup the config file
-RUN echo '{"bot_directory_location": "/home/aiarena/StarCraftII/Bots", "sc2_directory_location": "/home/aiarena/StarCraftII/", "replay_directory_location": "/home/aiarena/StarCraftII/Replays", "API_token": "", "max_game_time": "60486", "allow_debug": "Off", "visualize": "Off"}' > /home/aiarena/aiarena-client/arenaclient/proxy/settings.json
+#RUN echo '{"bot_directory_location": "/home/aiarena/StarCraftII/Bots", "sc2_directory_location": "/home/aiarena/StarCraftII/", "replay_directory_location": "/home/aiarena/StarCraftII/Replays", "API_token": "", "max_game_time": "60486", "allow_debug": "Off", "visualize": "Off"}' > /home/aiarena/aiarena-client/arenaclient/proxy/settings.json
 
 WORKDIR /home/aiarena/aiarena-client/arenaclient
 
 # Run the match runner gui
-ENTRYPOINT [ "/home/aiarena/run.sh" ]
+ENTRYPOINT [ "python3.7", "-m arenaclient", "-f" ]
