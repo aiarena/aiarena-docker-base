@@ -72,6 +72,7 @@ ENV PATH $PATH
 
 # Copy the run file
 COPY run.sh /home/aiarena/run.sh
+RUN chmod +x /home/aiarena/run.sh
 
 # Copy the aiarena client
 COPY cache/aiarena-client.zip /home/aiarena/
