@@ -58,8 +58,8 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
 RUN python3 -m pip install --upgrade pip pipenv
 
 # Download python requirements files
-COPY cache/requirements.linux.txt client-requirements.txt
-COPY cache/bot-requirements.txt bot-requirements.txt
+RUN wget https://github.com/aiarena/aiarena-client/raw/master/requirements.txt -O client-requirements.txt
+RUN wget https://gitlab.com/aiarena/aiarena-client-provisioning/raw/master/aiarena-vm/templates/python-requirements.txt.j2 -O bot-requirements.txt
 
 # Install python modules
 RUN pip3.7 install -r client-requirements.txt
@@ -74,9 +74,8 @@ ENV PATH $PATH
 COPY run.sh /home/aiarena/run.sh
 RUN chmod +x /home/aiarena/run.sh
 
-# Copy the aiarena client
-COPY cache/aiarena-client.zip /home/aiarena/
-RUN unzip aiarena-client.zip && rm aiarena-client.zip
+# Download the aiarena client
+RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
 # Copy the config file
 COPY example_config.py /home/aiarena/aiarena-client/arenaclient/config.py
