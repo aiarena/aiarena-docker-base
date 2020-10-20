@@ -1,7 +1,7 @@
 # Sets up ai-arena client
 
 FROM python:3.7-slim
-MAINTAINER m1ndgames <m1nd@ai-arena.net>
+MAINTAINER AI Arena <staff@aiarena.net>
 
 USER root
 WORKDIR /root/
