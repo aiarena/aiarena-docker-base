@@ -120,6 +120,12 @@ ENV HOST 0.0.0.0
 # Install the arena client as a module
 RUN python3.7 /home/aiarena/aiarena-client/setup.py install
 
+# Install nodejs
+RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded g++
+
+RUN wget https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get install -y nodejs
+
 # Switch User
 USER aiarena
 
