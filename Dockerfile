@@ -135,6 +135,13 @@ ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenac
 # Setup the config file
 RUN echo '{"bot_directory_location": "/home/aiarena/StarCraftII/Bots", "sc2_directory_location": "/home/aiarena/StarCraftII/", "replay_directory_location": "/home/aiarena/StarCraftII/Replays", "API_token": "", "max_game_time": "60486", "allow_debug": "Off", "visualize": "Off"}' > /home/aiarena/aiarena-client/arenaclient/proxy/settings.json
 
+# Install SC2MapAnalysis
+WORKDIR /home/aiarena/
+COPY cache/SC2MapAnalysis-master.zip /home/aiarena/SC2MapAnalysis-master.zip
+RUN unzip SC2MapAnalysis-master.zip
+WORKDIR /home/aiarena/SC2MapAnalysis-master
+RUN pip3 install .
+
 WORKDIR /home/aiarena/aiarena-client/arenaclient
 
 # Run the match runner
