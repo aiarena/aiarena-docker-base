@@ -68,7 +68,6 @@ RUN pip3.7 install -r bot-requirements.txt
 # Create aiarena user and change workdir/user
 RUN useradd -ms /bin/bash aiarena
 WORKDIR /home/aiarena/
-USER aiarena
 ENV PATH $PATH
 
 # Copy the run file
@@ -104,10 +103,6 @@ RUN rm -Rf maps
 RUN mkdir -p /home/aiarena/StarCraftII/Bots
 RUN mkdir -p /home/aiarena/StarCraftII/Replays
 
-# Switch User
-USER root
-#RUN chmod +x /home/aiarena/run.sh
-
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded libgtk2.0-dev
 
 # Change to working directory
@@ -125,9 +120,6 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded g++
 
 RUN wget https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
-
-# Switch User
-USER aiarena
 
 # Add Pythonpath to env
 ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
