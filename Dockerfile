@@ -27,7 +27,8 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     libgtk2.0-dev \
     software-properties-common \
     dirmngr \
-    gpg-agent
+    gpg-agent \
+    g++
 
 # Add the microsoft repo for dotnetcore
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
@@ -38,7 +39,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list
 
 # Install Zulu Repo for openjdk-12
-RUN apt-key adv --keyserver pgp.mit.edu --recv B1998361219BD9C9
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
 RUN add-apt-repository 'deb http://repos.azulsystems.com/debian stable main'
 
 # Update APT cache
@@ -70,10 +71,6 @@ RUN useradd -ms /bin/bash aiarena
 WORKDIR /home/aiarena/
 ENV PATH $PATH
 
-# Copy the run file
-COPY run.sh /home/aiarena/run.sh
-RUN chmod +x /home/aiarena/run.sh
-
 # Download the aiarena client
 RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
@@ -100,8 +97,8 @@ RUN cp /home/aiarena/maps/* /home/aiarena/StarCraftII/Maps
 RUN rm -Rf maps
 
 # Create Bot and Replay directories
-RUN mkdir -p /home/aiarena/StarCraftII/Bots
-RUN mkdir -p /home/aiarena/StarCraftII/Replays
+RUN mkdir -p /home/aiarena/aiarena-client/Bots
+RUN mkdir -p /home/aiarena/aiarena-client/Replays
 
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded libgtk2.0-dev
 
@@ -116,16 +113,14 @@ ENV HOST 0.0.0.0
 RUN python3.7 /home/aiarena/aiarena-client/setup.py install
 
 # Install nodejs
-RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded g++
-
 RUN wget https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
 
 # Add Pythonpath to env
 ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
 
-# Setup the config file
-RUN echo '{"bot_directory_location": "/home/aiarena/StarCraftII/Bots", "sc2_directory_location": "/home/aiarena/StarCraftII/", "replay_directory_location": "/home/aiarena/StarCraftII/Replays", "API_token": "", "max_game_time": "60486", "allow_debug": "Off", "visualize": "Off"}' > /home/aiarena/aiarena-client/arenaclient/proxy/settings.json
+# Copy the config file
+COPY example_config.py /home/aiarena/aiarena-client/config.py
 
 # Install SC2MapAnalysis
 WORKDIR /home/aiarena/
@@ -134,7 +129,7 @@ RUN unzip SC2MapAnalysis-master.zip
 WORKDIR /home/aiarena/SC2MapAnalysis-master
 RUN pip3 install .
 
-WORKDIR /home/aiarena/aiarena-client/arenaclient
+WORKDIR /home/aiarena/aiarena-client/
 
 # Run the match runner
-ENTRYPOINT [ "/home/aiarena/run.sh" ]
+ENTRYPOINT [ "/usr/local/bin/python3.7", "-m", "arenaclient" ]

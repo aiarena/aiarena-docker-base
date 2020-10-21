@@ -1,8 +1,8 @@
 from urllib import parse
 from arenaclient.matches import HttpApiMatchSource
 
-ARENA_CLIENT_ID = "lladdy"
-API_TOKEN = "1e69601e128c8d05a75ca6d929b87471fad77c51"
+ARENA_CLIENT_ID = "???"
+API_TOKEN = "???"
 SHUT_DOWN_AFTER_RUN = True
 ROUNDS_PER_RUN = 10
 BASE_WEBSITE_URL = "http://host.docker.internal:8000"
