@@ -133,4 +133,4 @@ RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar 
 WORKDIR /home/aiarena/aiarena-client/
 
 # Run the match runner
-ENTRYPOINT [ "/usr/local/bin/python3.7", "-m", "arenaclient" ]
+ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.7", "-m", "arenaclient" ]
