@@ -71,9 +71,6 @@ RUN useradd -ms /bin/bash aiarena
 WORKDIR /home/aiarena/
 ENV PATH $PATH
 
-# Download the aiarena client
-RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
-
 # Copy the config file
 COPY example_config.py /home/aiarena/aiarena-client/arenaclient/config.py
 
@@ -128,6 +125,10 @@ COPY cache/SC2MapAnalysis-master.zip /home/aiarena/SC2MapAnalysis-master.zip
 RUN unzip SC2MapAnalysis-master.zip
 WORKDIR /home/aiarena/SC2MapAnalysis-master
 RUN pip3 install .
+
+# Download the aiarena client
+CACHE-OFF
+RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
 
 WORKDIR /home/aiarena/aiarena-client/
 
