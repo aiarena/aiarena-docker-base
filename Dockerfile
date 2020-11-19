@@ -1,7 +1,7 @@
 # Sets up ai-arena client
 
 FROM python:3.7-slim
-MAINTAINER m1ndgames <m1nd@ai-arena.net>
+MAINTAINER AI Arena <staff@aiarena.net>
 
 USER root
 WORKDIR /root/
@@ -27,7 +27,8 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     libgtk2.0-dev \
     software-properties-common \
     dirmngr \
-    gpg-agent
+    gpg-agent \
+    g++
 
 # Add the microsoft repo for dotnetcore
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
@@ -38,7 +39,7 @@ RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list
 
 # Install Zulu Repo for openjdk-12
-RUN apt-key adv --keyserver pgp.mit.edu --recv B1998361219BD9C9
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
 RUN add-apt-repository 'deb http://repos.azulsystems.com/debian stable main'
 
 # Update APT cache
@@ -58,27 +59,16 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
 RUN python3 -m pip install --upgrade pip pipenv
 
 # Download python requirements files
-RUN wget https://gitlab.com/aiarena/aiarena-client/raw/master/requirements.linux.txt -O client-requirements.txt
-RUN wget https://gitlab.com/aiarena/aiarena-client-provisioning/raw/master/aiarena-vm/templates/python-requirements.txt.j2 -O bot-requirements.txt
+RUN wget https://github.com/aiarena/aiarena-client/raw/master/requirements.txt -O client-requirements.txt
+COPY requirements.txt bot-requirements.txt
 
 # Install python modules
 RUN pip3.7 install -r client-requirements.txt
 RUN pip3.7 install -r bot-requirements.txt
 
-# Create aiarena user and change workdir/user
-RUN useradd -ms /bin/bash aiarena
-WORKDIR /home/aiarena/
-USER aiarena
-ENV PATH $PATH
-
-# Copy the run file
-COPY run.sh /home/aiarena/run.sh
-
-# Download the aiarena client
-RUN wget https://gitlab.com/aiarena/aiarena-client/-/archive/master/aiarena-client-master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
-
-# Copy the config file
-COPY example_config.py /home/aiarena/aiarena-client/arenaclient/config.py
+# Create bot users
+RUN useradd -ms /bin/bash bot_player1
+RUN useradd -ms /bin/bash bot_player2
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
@@ -86,49 +76,38 @@ RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
     && rm SC2.4.10.zip
 
 # Create a symlink for the maps directory
-RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
+RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps
 
 # Remove the Maps that come with the SC2 client
-RUN rm -Rf /home/aiarena/StarCraftII/maps/*
+RUN rm -Rf /root/StarCraftII/maps/*
 
-# Download and install the Map Pack
-RUN wget -q 'http://blzdistsc2-a.akamaihd.net/MapPacks/Ladder2019Season3.zip' \
-    && unzip -P iagreetotheeula Ladder2019Season3.zip \
-    && rm Ladder2019Season3.zip
-
-RUN mv Ladder2019Season3 /home/aiarena/StarCraftII/Maps
-RUN cp /home/aiarena/StarCraftII/Maps/Ladder2019Season3/* /home/aiarena/StarCraftII/Maps
+# Download the aiarena client
+RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf master.tar.gz && mv aiarena-client-master aiarena-client
 
 # Create Bot and Replay directories
-RUN mkdir -p /home/aiarena/StarCraftII/Bots
-RUN mkdir -p /home/aiarena/StarCraftII/Replays
-
-# Switch User
-USER root
-#RUN chmod +x /home/aiarena/run.sh
+RUN mkdir -p /root/aiarena-client/Bots
+RUN mkdir -p /root/aiarena-client/Replays
 
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded libgtk2.0-dev
 
 # Change to working directory
-WORKDIR /home/aiarena/aiarena-client
+WORKDIR /root/aiarena-client/
 
 # Add Pythonpath to env
-ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
+ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 ENV HOST 0.0.0.0
 
 # Install the arena client as a module
-RUN python3.7 /home/aiarena/aiarena-client/setup.py install
+RUN python3.7 /root/aiarena-client/setup.py install
 
-# Switch User
-USER aiarena
+# Install nodejs
+RUN wget https://deb.nodesource.com/setup_12.x | bash -
+RUN apt-get install -y nodejs
 
 # Add Pythonpath to env
-ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
+ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 
-# Setup the config file
-RUN echo '{"bot_directory_location": "/home/aiarena/StarCraftII/Bots", "sc2_directory_location": "/home/aiarena/StarCraftII/", "replay_directory_location": "/home/aiarena/StarCraftII/Replays", "API_token": "", "max_game_time": "60486", "allow_debug": "Off", "visualize": "Off"}' > /home/aiarena/aiarena-client/arenaclient/proxy/settings.json
+WORKDIR /root/aiarena-client/
 
-WORKDIR /home/aiarena/aiarena-client/arenaclient
-
-# Run the match runner gui
-ENTRYPOINT [ "/home/aiarena/run.sh" ]
+# Run the match runner
+ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.7", "-m", "arenaclient" ]
