@@ -60,77 +60,54 @@ RUN python3 -m pip install --upgrade pip pipenv
 
 # Download python requirements files
 RUN wget https://github.com/aiarena/aiarena-client/raw/master/requirements.txt -O client-requirements.txt
-RUN wget https://gitlab.com/aiarena/aiarena-client-provisioning/raw/master/aiarena-vm/templates/python-requirements.txt.j2 -O bot-requirements.txt
+COPY requirements.txt bot-requirements.txt
 
 # Install python modules
 RUN pip3.7 install -r client-requirements.txt
 RUN pip3.7 install -r bot-requirements.txt
 
-# Create aiarena user and change workdir/user
-RUN useradd -ms /bin/bash aiarena
-WORKDIR /home/aiarena/
-ENV PATH $PATH
+# Create bot users
+RUN useradd -ms /bin/bash bot_player1
+RUN useradd -ms /bin/bash bot_player2
 
-# Copy the config file
-COPY example_config.py /home/aiarena/aiarena-client/arenaclient/config.py
-
-# Copy and uncompress StarCraftII and remove zip file
-COPY cache/SC2.4.10.zip /home/aiarena/SC2.4.10.zip
-RUN unzip -P iagreetotheeula SC2.4.10.zip \
+# Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
+RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
+    && unzip -P iagreetotheeula SC2.4.10.zip \
     && rm SC2.4.10.zip
 
 # Create a symlink for the maps directory
-RUN ln -s /home/aiarena/StarCraftII/Maps /home/aiarena/StarCraftII/maps
+RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps
 
 # Remove the Maps that come with the SC2 client
-RUN rm -Rf /home/aiarena/StarCraftII/maps/*
+RUN rm -Rf /root/StarCraftII/maps/*
 
-# Copy and install the Map Pack
-COPY cache/maps.zip /home/aiarena/maps.zip
-RUN unzip maps.zip \
-    && rm maps.zip
-
-RUN cp /home/aiarena/maps/* /home/aiarena/StarCraftII/Maps
-RUN rm -Rf maps
+# Download the aiarena client
+RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf master.tar.gz && mv aiarena-client-master aiarena-client
 
 # Create Bot and Replay directories
-RUN mkdir -p /home/aiarena/aiarena-client/Bots
-RUN mkdir -p /home/aiarena/aiarena-client/Replays
+RUN mkdir -p /root/aiarena-client/Bots
+RUN mkdir -p /root/aiarena-client/Replays
 
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded libgtk2.0-dev
 
 # Change to working directory
-WORKDIR /home/aiarena/aiarena-client
+WORKDIR /root/aiarena-client/
 
 # Add Pythonpath to env
-ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
+ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 ENV HOST 0.0.0.0
 
 # Install the arena client as a module
-RUN python3.7 /home/aiarena/aiarena-client/setup.py install
+RUN python3.7 /root/aiarena-client/setup.py install
 
 # Install nodejs
 RUN wget https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get install -y nodejs
 
 # Add Pythonpath to env
-ENV PYTHONPATH=/home/aiarena/aiarena-client/:/home/aiarena/aiarena-client/arenaclient/
+ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 
-# Copy the config file
-COPY example_config.py /home/aiarena/aiarena-client/config.py
-
-# Install SC2MapAnalysis
-WORKDIR /home/aiarena/
-COPY cache/SC2MapAnalysis-master.zip /home/aiarena/SC2MapAnalysis-master.zip
-RUN unzip SC2MapAnalysis-master.zip
-WORKDIR /home/aiarena/SC2MapAnalysis-master
-RUN pip3 install .
-
-# Download the aiarena client
-CACHE-OFF
-RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf aiarena-client-master.tar.gz && mv aiarena-client-master aiarena-client
-
-WORKDIR /home/aiarena/aiarena-client/
+WORKDIR /root/aiarena-client/
 
 # Run the match runner
 ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.7", "-m", "arenaclient" ]
