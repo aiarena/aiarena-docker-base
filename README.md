@@ -1,13 +1,13 @@
 # aiarena-docker
 
-change the client and api token in the config.py
+## Build
 
+`docker build .`
 
-build the container:
+## Configure
 
-docker build  .
+Create your config based off [example_config.py](./example_config.py)  
+Make sure you set your client id, api token, and website url.
 
-
-run the container:
-
-docker run --cap-add=SYS_PTRACE container-ID
+## Run
+`docker run -it -d -v /path/to/your/config.py:/root/aiarena-client/config.py --restart=unless-stopped <container-id>`
