@@ -41,7 +41,7 @@ Follow the steps below to configure and run an example match between two standar
   export BOTS_PATH="/path/to/your/bots"
   export MAPS_PATH="/path/to/your/maps"
   export REPLAYS_PATH="/path/to/new/empty/directory"
-  docker run -v ${CONFIG_PATH}:/root/aiarena-client/config.py -v ${MATCHES_Path}:/root/aiarena-client/matches -v ${BOTS_PATH}:/root/aiarena-client/bots -v ${MAPS_PATH}:/root/StarCraftII/maps ${REPLAYS_PATH}:/root/aiarena-client/replays:rw -v -it aiarena
+  docker run -v ${CONFIG_PATH}:/root/aiarena-client/config.py -v ${MATCHES_PATH}:/root/aiarena-client/matches -v ${BOTS_PATH}:/root/aiarena-client/bots -v ${MAPS_PATH}:/root/StarCraftII/maps ${REPLAYS_PATH}:/root/aiarena-client/replays:rw -v -it aiarena
   ```
 
   After the command completes, replays will be available in `$REPLAYS_PATH` directory.
