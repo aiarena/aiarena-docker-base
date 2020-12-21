@@ -10,6 +10,14 @@ RUN dpkg --add-architecture i386
 
 # Update system
 RUN apt-get update && apt-get upgrade --assume-yes --quiet=2
+RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
+    wget \
+    unzip 
+
+# Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
+RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
+    && unzip -P iagreetotheeula SC2.4.10.zip \
+    && rm SC2.4.10.zip
 
 # Install common software via APT
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
@@ -17,8 +25,6 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     make \
     gcc \
     tree \
-    unzip \
-    wget \
     gpg \
     python-dev \
     procps \
@@ -30,13 +36,18 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     gpg-agent \
     g++
 
-# Add the microsoft repo for dotnetcore
+
+
+# Add the microsoft repo for dotnetcore prior to NET 5.0
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
     mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
     wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
     mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
     chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
     chown root:root /etc/apt/sources.list.d/microsoft-prod.list
+
+# Add NET 5.0 support
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb  && dpkg -i packages-microsoft-prod.deb && apt-get update && apt-get install -y apt-transport-https && apt-get update && apt-get install -y dotnet-sdk-5.0
 
 # Install Zulu Repo for openjdk-12
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
@@ -70,11 +81,6 @@ RUN pip3.7 install -r bot-requirements.txt
 RUN useradd -ms /bin/bash bot_player1
 RUN useradd -ms /bin/bash bot_player2
 
-# Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
-RUN wget -q 'http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip' \
-    && unzip -P iagreetotheeula SC2.4.10.zip \
-    && rm SC2.4.10.zip
-
 # Create a symlink for the maps directory
 RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps
 
@@ -82,7 +88,7 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps
 RUN rm -Rf /root/StarCraftII/maps/*
 
 # Download the aiarena client
-RUN wget https://github.com/aiarena/aiarena-client/archive/master.tar.gz && tar xvzf master.tar.gz && mv aiarena-client-master aiarena-client
+RUN git clone  https://github.com/aiarena/aiarena-client.git aiarena-client
 
 # Create Bot and Replay directories
 RUN mkdir -p /root/aiarena-client/Bots
