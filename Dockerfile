@@ -1,6 +1,6 @@
 # Sets up ai-arena client
 
-FROM python:3.7-slim
+FROM python:3.9.1-slim
 MAINTAINER AI Arena <staff@aiarena.net>
 
 USER root
