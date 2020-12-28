@@ -47,5 +47,5 @@ sqlalchemy
 loguru
 scikit-image
 tqdm
-pyastar @ git+git://github.com/hjweide/pyastar.git@master#egg=pyastar
+pyastar @ git+git://github.com/eladyaniv01/pyastar.git@master#egg=pyastar
 sc2mapanalyzer @ git+git://github.com/eladyaniv01/SC2MapAnalysis.git#egg==sc2mapanalyzer
