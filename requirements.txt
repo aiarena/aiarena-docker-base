@@ -4,7 +4,7 @@ h5py==2.10.0
 scipy
 opencv-python
 keras==2.3.1
-scikit-learn
+scikit-learn==0.22.2 # until sharpy upgrades their dependencies 
 pandas
 more-itertools
 python-utils
@@ -48,3 +48,4 @@ loguru
 scikit-image
 tqdm
 pyastar @ git+git://github.com/hjweide/pyastar.git@master#egg=pyastar
+sc2mapanalyzer @ git+git://github.com/eladyaniv01/SC2MapAnalysis.git#egg==sc2mapanalyzer
