@@ -1,6 +1,6 @@
 # Sets up ai-arena client
 
-FROM aiarena/sc2linuxbase:latest
+FROM aiarena/sc2-linux-base:latest
 MAINTAINER AI Arena <staff@aiarena.net>
 
 # Create a symlink for the maps directory
