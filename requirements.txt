@@ -9,7 +9,7 @@ pandas
 more-itertools
 python-utils
 Theano
-aiohttp==3.6.2
+aiohttp==3.7.4
 async-timeout==3.0.1
 attrs==19.1.0
 certifi==2019.6.16
