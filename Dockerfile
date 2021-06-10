@@ -13,7 +13,7 @@ COPY requirements.txt bot-requirements.txt
 
 # Install python modules
 # Download the aiarena client
-RUN pip3.7 install -r client-requirements.txt && pip3.7 install -r bot-requirements.txt && git clone  https://github.com/aiarena/aiarena-client.git aiarena-client
+RUN pip3.9 install -r client-requirements.txt && pip3.9 install -r bot-requirements.txt && git clone  https://github.com/aiarena/aiarena-client.git aiarena-client
 
 # Create bot users
 # Create Bot and Replay directories
@@ -27,7 +27,7 @@ ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 ENV HOST 0.0.0.0
 
 # Install the arena client as a module
-RUN python3.7 /root/aiarena-client/setup.py install
+RUN python3.9 /root/aiarena-client/setup.py install
 
 # Add Pythonpath to env
 ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
@@ -35,4 +35,4 @@ ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
 WORKDIR /root/aiarena-client/
 
 # Run the match runner
-ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.7", "-m", "arenaclient" ]
+ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]
