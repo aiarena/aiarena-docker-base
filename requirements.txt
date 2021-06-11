@@ -13,7 +13,7 @@ aiohttp==3.7.4
 async-timeout==3.0.1
 attrs==21.2.0
 certifi==2021.5.30
-chardet==4.0.0
+chardet
 future==0.18.2
 idna==2.10
 multidict==5.1.0
