@@ -17,7 +17,7 @@ chardet
 future==0.18.2
 idna==2.10
 multidict==5.1.0
-numpy==1.19.3
+numpy==1.20.3
 pipenv==2021.5.29
 portpicker==1.4.0
 protobuf==3.17.3
