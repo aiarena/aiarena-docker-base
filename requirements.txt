@@ -26,7 +26,7 @@ pyglet==1.5.15
 requests==2.25.1
 burnysc2==5.0.11
 six==1.15.0
-s2clientprotocol==4.10.2.76052.0
+s2clientprotocol==5.0.7.84643.0
 termcolor==1.1.0
 urllib3==1.26.5
 virtualenv==20.4.7
