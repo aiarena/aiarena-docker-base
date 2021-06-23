@@ -11,13 +11,15 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps && rm -Rf /root/StarCraf
 RUN wget https://github.com/aiarena/aiarena-client/raw/master/requirements.txt -O client-requirements.txt
 COPY requirements.txt bot-requirements.txt
 
+# Install python modules
+RUN pip3.9 install -r client-requirements.txt && pip3.9 install -r bot-requirements.txt
+
 # Calls for a random number to break the cahing of the git clone
 # (https://stackoverflow.com/questions/35134713/disable-cache-for-specific-run-commands/58801213#58801213)
 ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 
-# Install python modules
 # Download the aiarena client
-RUN pip3.9 install -r client-requirements.txt && pip3.9 install -r bot-requirements.txt && git clone https://github.com/aiarena/aiarena-client.git aiarena-client
+RUN git clone https://github.com/aiarena/aiarena-client.git aiarena-client
 
 # Create bot users
 # Create Bot and Replay directories
