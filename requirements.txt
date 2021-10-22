@@ -41,7 +41,7 @@ imutils==0.5.4
 jinja2==3.0.1
 gym==0.18.3
 torch==1.8.1
-torchvision==0.9.1
+torchvision==0.11.1
 torch_optimizer==0.1.0
 sqlalchemy==1.4.18
 loguru==0.5.3
