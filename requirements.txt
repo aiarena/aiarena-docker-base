@@ -1,7 +1,7 @@
 pysc2==3.0.0
 tensorflow==2.5.0
 h5py==3.1.0
-scipy==1.6.3
+scipy==1.7.3
 opencv-python==4.5.2.54
 keras==2.4.3
 scikit-learn==0.24.2
