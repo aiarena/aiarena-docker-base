@@ -1,11 +1,8 @@
 # aiarena-docker
 
-## Docker pull
+## Local play
 
-To use the prebuilt docker image, run the following command:
-```
-docker pull aiarena/arenaclient
-``` 
+If you're just looking for a way to play local matches using docker, check out the [local-play-bootstrap](https://github.com/aiarena/local-play-bootstrap).
 
 ## Build
 
