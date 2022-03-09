@@ -1,7 +1,15 @@
 # aiarena-docker
 
+## Docker pull
+
+To use the prebuilt docker image, run the following command:
+```
+docker pull aiarena/arenaclient
+``` 
+
 ## Build
 
+For general usage, we advise against building the image your - use the docker pull command above instead.  
 Use the following command to build image with name `aiarena`:
 
 ```
