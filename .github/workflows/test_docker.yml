@@ -8,6 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
+      matrix:
         os: [ubuntu-latest]
         python-version: ['3.8', '3.9', '3.10']
 
@@ -44,6 +45,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
+      matrix:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v1
