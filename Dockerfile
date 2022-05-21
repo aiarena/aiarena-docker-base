@@ -1,6 +1,9 @@
 # Sets up ai-arena client
+ARG PYTHON_VERSION=3.9
+ARG SC2_VERSION=4.10
+ARG VERSION_NUMBER=1.0.0
 
-FROM aiarena/sc2-linux-base:latest
+FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER
 MAINTAINER AI Arena <staff@aiarena.net>
 
 # Create a symlink for the maps directory
@@ -14,8 +17,9 @@ ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master ve
 
 # Download python requirements files
 ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
-ADD pyproject.toml pyproject.toml
-ADD poetry.lock poetry.lock
+
+# Add local pyproject.toml and poetry.lock
+ADD pyproject.toml poetry.lock ./
 
 # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
 RUN pip install poetry \
@@ -45,7 +49,7 @@ WORKDIR /root/aiarena-client/
 
 # Add Pythonpath to env
 ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
-ENV HOST 0.0.0.0
+ENV HOST=0.0.0.0
 
 # Install the arena client as a module
 RUN python /root/aiarena-client/setup.py install

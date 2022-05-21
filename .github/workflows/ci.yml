@@ -1,0 +1,135 @@
+name: Build and push docker images
+
+on: [push, pull_request]
+
+# Version number of the docker images - increment when there are huge changes
+env:
+  VERSION_NUMBER: 1.0.0
+
+jobs:
+  run_pip_install:
+    name: Merge and install requirements.txt
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.9']
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      run: |
+        python -m pip install poetry
+
+    - name: Get client requirements.txt
+      run: |
+        wget https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt -O client-requirements.txt
+
+    - name: Install client requirements.txt
+      run: |
+        poetry add $(cat client-requirements.txt)
+
+    - name: Export requirements.txt
+      run: |
+        poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+    - name: Install requirements.txt via pip
+      run: |
+        pip install -r requirements.txt
+
+  run_docker_build_images:
+    name: Run docker build
+    runs-on: ${{ matrix.os }}
+    needs: [run_pip_install]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.8', '3.9', '3.10']
+        sc2-version: ['4.10']
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Build sc2 linux base image
+      run: |
+        docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} sc2linuxbase-docker
+
+    - name: Build arenaclient image
+      run: |
+        docker build -t aiarena/arenaclient:temp_image --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} .
+
+    # TODO After successfully building the images, run bots from various programming languages against each other and verify that they at least launch and not crash in the first few seconds
+
+  docker_build_and_push_sc2_linux_base_image:
+    name: Run docker build
+    runs-on: ${{ matrix.os }}
+    needs: [run_docker_build_images]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8', '3.9', '3.10']
+        sc2-version: ['4.10']
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
+        build-args: |
+          PYTHON_VERSION=${{ matrix.python-version }}
+          SC2_VERSION=${{ matrix.sc2-version }}
+
+  docker_build_and_push_aiarena_client_image:
+    name: Run docker build
+    runs-on: ${{ matrix.os }}
+    needs: [docker_build_and_push_sc2_linux_base_image]
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.9', '3.10']
+        sc2-version: ['4.10']
+    steps:
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
+        build-args: |
+          PYTHON_VERSION=${{ matrix.python-version }}
+          SC2_VERSION=${{ matrix.sc2-version }}
