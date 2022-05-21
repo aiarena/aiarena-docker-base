@@ -40,23 +40,28 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     gpg-agent \
     g++
 
-# Add the microsoft repo for dotnetcore prior to NET 5.0
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
-    mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
-    wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
-    mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
-    chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
-    chown root:root /etc/apt/sources.list.d/microsoft-prod.list
+# Prepare NET 5.0 installation
+ADD https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    # Add NET 5.0 support
+    && apt-get install -y dotnet-runtime-5.0
 
-# Add NET 5.0 support
-RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb  && dpkg -i packages-microsoft-prod.deb && apt-get update && apt-get install -y apt-transport-https && apt-get update && apt-get install -y dotnet-sdk-5.0
+# Prepare NET 6.0 installation
+ADD https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    # Add NET 6.0 support
+    # https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#2204
+    # Don't install aspnetcore-runtime
+    && apt-get install -y dotnet-runtime-6.0
 
 # Install Zulu Repo for openjdk-12
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9
-RUN add-apt-repository 'deb http://repos.azulsystems.com/debian stable main'
-
-# Update APT cache
-RUN apt-get update
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 \
+    && add-apt-repository 'deb http://repos.azulsystems.com/debian stable main' \
+    && apt-get update
 
 # Needed for Java install
 RUN mkdir -p /usr/share/man/man1
@@ -64,15 +69,13 @@ RUN mkdir -p /usr/share/man/man1
 # Install nodejs
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded npm
 
-# Install software via APT
-RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
-    wine32 \
-    dotnet-sdk-6.0
+# Install wine
+RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded wine32
 
-# Upgrade pip
+# Upgrade python pip
 RUN python -m pip install --upgrade pip
 
 # Install Zulu for Java 16
 RUN wget -q https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
 	&& apt install --assume-yes ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-	&& rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb
+	&& rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
