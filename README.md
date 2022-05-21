@@ -14,6 +14,10 @@ Use the following command to build image with name `aiarena`:
 docker build -t aiarena/arenaclient:latest --build-arg PYTHON_VERSION=3.9 --build-arg SC2_VERSION=4.10 --build-arg VERSION_NUMBER=1.0.0 .
 ```
 
+## Tests
+
+See ``test_docker_image.sh`` which builds both local dockerfiles and then runs the aiarena client with several bots and checks the results with expected outcomes.
+
 ## Usage
 
 This docker can be used to run AI Arena ladder on a local machine.

@@ -48,7 +48,7 @@ jobs:
   run_docker_build_images:
     name: Run docker build
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +66,22 @@ jobs:
       run: |
         docker build -t aiarena/arenaclient:temp_image --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
 
-    # TODO After successfully building the images, run bots from various programming languages against each other and verify that they at least launch and not crash in the first few seconds
+    - name: Run test bots
+      run: |
+        echo "Start container with correct env variables, override the default entrypoint"
+        docker run -it -d \
+          --name testcontainer \
+          --env SC2_PROXY_BIN=SC2_x64 \
+          --env SC2_PROXY_BASE=/root/StarCraftII/ \
+          --entrypoint /bin/bash \
+          --workdir="/root/aiarena-client" \
+          aiarena/arenaclient:temp_image
+        echo "Adding maps"
+        docker exec -it testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
+        echo "Adding bots"
+        docker exec -it testcontainer bash -c "git clone https://github.com/aiarena/aiarena-test-bots testing/aiarena-test-bots"
+        echo "Starting tests"
+        docker exec -it testcontainer bash -c "python -m arenaclient --test"
 
   docker_build_and_push_sc2_linux_base_image:
     name: Run docker build and push sc2 linux base image
