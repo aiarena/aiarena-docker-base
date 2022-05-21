@@ -69,7 +69,7 @@ jobs:
     - name: Run test bots
       run: |
         echo "Start container with correct env variables, override the default entrypoint"
-        docker run -it -d \
+        docker run -i -d \
           --name testcontainer \
           --env SC2_PROXY_BIN=SC2_x64 \
           --env SC2_PROXY_BASE=/root/StarCraftII/ \
@@ -77,11 +77,11 @@ jobs:
           --workdir="/root/aiarena-client" \
           aiarena/arenaclient:temp_image
         echo "Adding maps"
-        docker exec -it testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
+        docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
         echo "Adding bots"
-        docker exec -it testcontainer bash -c "git clone https://github.com/aiarena/aiarena-test-bots testing/aiarena-test-bots"
+        docker exec -i testcontainer bash -c "git clone https://github.com/aiarena/aiarena-test-bots testing/aiarena-test-bots"
         echo "Starting tests"
-        docker exec -it testcontainer bash -c "python -m arenaclient --test"
+        docker exec -i testcontainer bash -c "python -m arenaclient --test"
 
   docker_build_and_push_sc2_linux_base_image:
     name: Run docker build and push sc2 linux base image

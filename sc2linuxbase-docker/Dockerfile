@@ -20,7 +20,7 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget -q http://blzdistsc2-a.akamaihd.net/Linux/SC2.$SC2_VERSION.zip \
-    && unzip -P iagreetotheeula SC2.$SC2_VERSION.zip \
+    && unzip -q -P iagreetotheeula SC2.$SC2_VERSION.zip \
     && rm SC2.$SC2_VERSION.zip
 
 # Install common software via APT
