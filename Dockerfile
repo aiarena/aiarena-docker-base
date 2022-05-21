@@ -13,8 +13,7 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
 ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
 
 # Download python requirements files
-# ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
-ADD client-requirements.txt client-requirements.txt
+ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
 ADD pyproject.toml pyproject.toml
 ADD poetry.lock poetry.lock
 
