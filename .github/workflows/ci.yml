@@ -48,9 +48,9 @@ jobs:
   run_docker_build_images:
     name: Run docker build
     runs-on: ${{ matrix.os }}
-    needs: [run_pip_install]
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ['3.8', '3.9', '3.10']
@@ -64,19 +64,20 @@ jobs:
 
     - name: Build arenaclient image
       run: |
-        docker build -t aiarena/arenaclient:temp_image --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} .
+        docker build -t aiarena/arenaclient:temp_image --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
 
     # TODO After successfully building the images, run bots from various programming languages against each other and verify that they at least launch and not crash in the first few seconds
 
   docker_build_and_push_sc2_linux_base_image:
     name: Run docker build and push sc2 linux base image
     runs-on: ${{ matrix.os }}
-    needs: [run_docker_build_images]
+    needs: [run_pip_install, run_docker_build_images]
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
         sc2-version: ['4.10']
     steps:
     - name: Set up QEMU
@@ -107,6 +108,7 @@ jobs:
     needs: [docker_build_and_push_sc2_linux_base_image]
     timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ['3.9', '3.10']
