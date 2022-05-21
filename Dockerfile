@@ -7,8 +7,9 @@ FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER
 MAINTAINER AI Arena <staff@aiarena.net>
 
 # Create a symlink for the maps directory
-# Remove the Maps that come with the SC2 client
-RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
+RUN mkdir -p /root/StarCraftII/maps/ \
+    && ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
+    # Remove the Maps that come with the SC2 client \
     && rm -Rf /root/StarCraftII/maps/*
 
 # Prevent caching unless client master branch changed
@@ -53,11 +54,6 @@ ENV HOST=0.0.0.0
 
 # Install the arena client as a module
 RUN python /root/aiarena-client/setup.py install
-
-# Add Pythonpath to env
-ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
-
-WORKDIR /root/aiarena-client/
 
 # Run the match runner
 ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]
