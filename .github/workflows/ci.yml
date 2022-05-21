@@ -60,7 +60,7 @@ jobs:
 
     - name: Build sc2 linux base image
       run: |
-        docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} sc2linuxbase-docker
+        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} sc2linuxbase-docker
 
     - name: Build arenaclient image
       run: |
@@ -69,7 +69,7 @@ jobs:
     # TODO After successfully building the images, run bots from various programming languages against each other and verify that they at least launch and not crash in the first few seconds
 
   docker_build_and_push_sc2_linux_base_image:
-    name: Run docker build
+    name: Run docker build and push sc2 linux base image
     runs-on: ${{ matrix.os }}
     needs: [run_docker_build_images]
     timeout-minutes: 15
@@ -102,7 +102,7 @@ jobs:
           SC2_VERSION=${{ matrix.sc2-version }}
 
   docker_build_and_push_aiarena_client_image:
-    name: Run docker build
+    name: Run docker build and push aiarena client image
     runs-on: ${{ matrix.os }}
     needs: [docker_build_and_push_sc2_linux_base_image]
     timeout-minutes: 15
