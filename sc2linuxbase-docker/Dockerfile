@@ -21,7 +21,15 @@ RUN dpkg --add-architecture i386 \
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 RUN wget --quiet --show-progress --progress=bar:force http://blzdistsc2-a.akamaihd.net/Linux/SC2.$SC2_VERSION.zip \
     && unzip -q -P iagreetotheeula SC2.$SC2_VERSION.zip \
-    && rm *.zip
+    && rm SC2.$SC2_VERSION.zip \
+    # Create a symlink for the maps directory
+    && ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
+    # Remove the Maps that come with the SC2 client
+    && rm -Rf /root/StarCraftII/maps/* \
+    # Remove Battle.net folder
+    && rm -rf /root/StarCraftII/Battle.net/* \
+    # Remove Shaders folder
+    && rm -rf /root/StarCraftII/Versions/Shaders*
 
 # Install common software via APT
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
@@ -71,4 +79,4 @@ RUN wget --quiet --show-progress --progress=bar:force https://packages.microsoft
     # Install Zulu for Java 16
     && wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
     && apt-get install --assume-yes ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-    && rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
+    && rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb
