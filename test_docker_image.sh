@@ -1,8 +1,13 @@
 # This script is meant for development, which produces fresh images and then runs tests
 
+# Set which versions to use
+export PYTHON_VERSION=3.9
+export SC2_VERSION=4.10
+export VERSION_NUMBER=1.0.0
+
 # Build images
-docker build -t aiarena/sc2-linux-base:py_3.9-sc2_4.10-v1.0.0 --build-arg PYTHON_VERSION=3.9 --build-arg SC2_VERSION=4.10 sc2linuxbase-docker
-docker build -t aiarena/arenaclient:latest --build-arg PYTHON_VERSION=3.9 --build-arg SC2_VERSION=4.10 --build-arg VERSION_NUMBER=1.0.0 .
+docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION sc2linuxbase-docker
+docker build -t aiarena/arenaclient:latest --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER .
 
 # Delete previous container if it exists
 docker rm -f testcontainer
@@ -17,7 +22,7 @@ docker run -it -d \
   aiarena/arenaclient:latest
 
 # Add maps
-docker exec -it testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
+docker exec -it testcontainer bash -c "cp -R /root/aiarena-client/testing/maps/* /root/StarCraftII/maps"
 # Add bots
 docker exec -it testcontainer bash -c "git clone https://github.com/aiarena/aiarena-test-bots testing/aiarena-test-bots"
 
