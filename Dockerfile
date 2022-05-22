@@ -25,7 +25,7 @@ RUN pip install poetry \
     # Export unified requirements as requirements.txt
     && poetry export -f requirements.txt --output requirements.txt --without-hashes \
     # Remove virtual environment
-    && pip uninstall poetry \
+    && pip uninstall -y poetry \
     && rm -rf .venv \
     # Install requirements.txt globally
     && pip install -r requirements.txt
