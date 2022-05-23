@@ -6,7 +6,7 @@ export SC2_VERSION=4.10
 export VERSION_NUMBER=1.0.0
 
 # Build images
-docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION sc2linuxbase-docker
+docker build -f sc2linuxbase-docker/Dockerfile -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION .
 docker build -t aiarena/arenaclient:latest --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER .
 
 # Delete previous container if it exists

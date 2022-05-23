@@ -65,7 +65,7 @@ jobs:
 
     - name: Build sc2 linux base image
       run: |
-        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} sc2linuxbase-docker
+        docker build -f sc2linuxbase-docker/Dockerfile -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} .
 
     - name: Build arenaclient image
       run: |

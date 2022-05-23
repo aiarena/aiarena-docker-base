@@ -22,7 +22,7 @@ RUN pip install poetry \
     && poetry config virtualenvs.in-project true \
     # Merge client requirements into current requirements
     && poetry add $(cat client-requirements.txt) \
-    # Export unified requirements as requirements.txt
+    # Export unified requirements as requirements.txt, this will not include dev dependencies
     && poetry export -f requirements.txt --output requirements.txt --without-hashes \
     # Remove virtual environment
     && pip uninstall -y poetry \
