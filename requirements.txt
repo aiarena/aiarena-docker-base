@@ -22,7 +22,7 @@ pipenv==2021.5.29
 portpicker==1.4.0
 protobuf==3.17.3
 psutil==5.8.0
-pyglet==1.5.15
+pyglet==1.5.26
 requests==2.25.1
 burnysc2==5.0.11
 six==1.15.0
