@@ -79,7 +79,7 @@ jobs:
   build_and_test_docker_images:
     name: Build and test docker images
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
