@@ -55,7 +55,7 @@ jobs:
   run_test_docker_image:
     name: Run test_docker_image.sh
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +81,7 @@ jobs:
   build_and_test_docker_images:
     name: Build and test docker images
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

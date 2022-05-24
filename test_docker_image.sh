@@ -23,17 +23,17 @@ fi
 # SC2LINUXBASE
 # Build images
 docker build -t $BASE_IMAGE_NAME $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
-# Squash image
+# Squashed image
 #docker build -t $BASE_IMAGE_NAME-squashed --squash $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
 # ARENACLIENT
 docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS .
-# Squash image
+# Squashed image
 #docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS .
 
 # Build arenaclient from squashed base image for even smaller image size
-#docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS USE_SQUASHED="-squashed" .
-# Squash image
+#docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS --build-arg USE_SQUASHED="-squashed" .
+# Squashed image
 #docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS --build-arg USE_SQUASHED="-squashed" .
 
 # Delete previous container if it exists
