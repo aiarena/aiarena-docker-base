@@ -88,13 +88,9 @@ jobs:
         python-version: ['3.8', '3.9']
         sc2-version: ['4.10']
     env:
-      BASE_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
-      BASE_BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }}
-
-      CLIENT_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
-      CLIENT_FINAL_IMAGE_NAME: aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
-      CLIENT_LATEST_IMAGE_NAME: aiarena/arenaclient:latest
-      CLIENT_BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }}
+      BASE_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}
+      CLIENT_IMAGE_NAME: aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}
+      BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }}
 
     steps:
     - uses: actions/checkout@v1
@@ -106,19 +102,19 @@ jobs:
 
     - name: Build sc2 linux base image
       run: |
-        docker build -t $BASE_IMAGE_NAME $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
+        docker build -t $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
     - name: Build squashed sc2 linux base image
       run: |
-        docker build -t $BASE_IMAGE_NAME-squashed --squash $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
+        docker build -t $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
     - name: Build arenaclient image
       run: |
-        docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS .
+        docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
 
     - name: Build squashed arenaclient image from squashed base image
       run: |
-        docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS --build-arg USE_SQUASHED="-squashed" .
+        docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
 
     - name: Run test bots using squashed image
       run: |
@@ -129,7 +125,7 @@ jobs:
           --env SC2_PROXY_BASE=/root/StarCraftII/ \
           --entrypoint /bin/bash \
           --workdir="/root/aiarena-client" \
-          $CLIENT_IMAGE_NAME-squashed
+          $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
         echo "Adding maps"
         docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
         echo "Adding bots"
@@ -144,35 +140,35 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
 # Does the base image need to be uploaded to docker hub?
-#    - name: Upload sc2 linux base image
+#    - name: Upload squashed sc2 linux base image
 #      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
 #      run: |
-#        docker push aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
+#        docker push $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
 #
 #    - name: Upload sc2 linux base image with latest tag
 #      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
 #      run: |
-#        docker tag aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} aiarena/sc2-linux-base:latest
+#        docker tag $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/sc2-linux-base:latest
 #        docker push aiarena/sc2-linux-base:latest
 
-#    - name: Upload arenaclient image
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-#      run: |
-#        docker push $CLIENT_IMAGE_NAME
-#
-#    - name: Upload arenaclient squashed image
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-#      run: |
-#        docker push $CLIENT_IMAGE_NAME-squashed
-#
-#    - name: Upload arenaclient squashed image as new version
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-#      run: |
-#        docker tag $CLIENT_IMAGE_NAME-squashed $CLIENT_FINAL_IMAGE_NAME
-#        docker push $CLIENT_FINAL_IMAGE_NAME
-#
-#    - name: Upload arenaclient squashed image as latest tag
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-#      run: |
-#        docker tag $CLIENT_IMAGE_NAME-squashed $CLIENT_LATEST_IMAGE_NAME
-#        docker push $CLIENT_LATEST_IMAGE_NAME
+    - name: Upload arenaclient image
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      run: |
+        docker push $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}
+
+    - name: Upload arenaclient squashed image
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      run: |
+        docker push $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
+
+    - name: Upload arenaclient squashed image as new version
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+      run: |
+        docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
+        docker push aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
+
+    - name: Upload arenaclient squashed image as latest tag
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+      run: |
+        docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:latest
+        docker push aiarena/arenaclient:latest
