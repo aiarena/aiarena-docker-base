@@ -70,10 +70,11 @@ jobs:
         sudo systemctl restart docker.service
 
     - name: Run shell script
+      env:
+        VERSION_NUMBER: ${{ env.VERSION_NUMBER }}
+        PYTHON_VERSION: ${{ env.LATEST_PYTHON_VERSION }}
+        SC2_VERSION: ${{ env.LATEST_SC2_VERSION }}
       run: |
-        export VERSION_NUMBER=${{ env.VERSION_NUMBER }}
-        export PYTHON_VERSION=${{ env.LATEST_PYTHON_VERSION }}
-        export SC2_VERSION=${{ env.LATEST_SC2_VERSION }}
         sh test_docker_image.sh
 
   build_and_test_docker_images:
@@ -86,6 +87,15 @@ jobs:
         os: [ubuntu-latest]
         python-version: ['3.8', '3.9']
         sc2-version: ['4.10']
+    env:
+      BASE_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
+      BASE_BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }}
+
+      CLIENT_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
+      CLIENT_FINAL_IMAGE_NAME: aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
+      CLIENT_LATEST_IMAGE_NAME: aiarena/arenaclient:latest
+      CLIENT_BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }}
+
     steps:
     - uses: actions/checkout@v1
 
@@ -96,19 +106,19 @@ jobs:
 
     - name: Build sc2 linux base image
       run: |
-        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} - < sc2linuxbase-docker/Dockerfile
+        docker build -t $BASE_IMAGE_NAME $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
     - name: Build squashed sc2 linux base image
       run: |
-        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} - < sc2linuxbase-docker/Dockerfile
+        docker build -t $BASE_IMAGE_NAME-squashed --squash $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
     - name: Build arenaclient image
       run: |
-        docker build -t aiarena/arenaclient:local --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+        docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS .
 
     - name: Build squashed arenaclient image from squashed base image
       run: |
-        docker build -t aiarena/arenaclient:local-squashed --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
+        docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS --build-arg USE_SQUASHED="-squashed" .
 
     - name: Run test bots using squashed image
       run: |
@@ -119,7 +129,7 @@ jobs:
           --env SC2_PROXY_BASE=/root/StarCraftII/ \
           --entrypoint /bin/bash \
           --workdir="/root/aiarena-client" \
-          aiarena/arenaclient:local-squashed
+          $CLIENT_IMAGE_NAME-squashed
         echo "Adding maps"
         docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
         echo "Adding bots"
@@ -145,21 +155,24 @@ jobs:
 #        docker tag aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} aiarena/sc2-linux-base:latest
 #        docker push aiarena/sc2-linux-base:latest
 
-    - name: Upload arenaclient image
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: |
-        docker tag aiarena/arenaclient:local aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
-        docker push aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
-
-    - name: Upload arenaclient squashed image
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: |
-        docker tag aiarena/arenaclient:local-squashed aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
-        docker push aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
-
-# TODO Enable when it was made sure that "latest" tag does not get used
+#    - name: Upload arenaclient image
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+#      run: |
+#        docker push $CLIENT_IMAGE_NAME
+#
+#    - name: Upload arenaclient squashed image
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+#      run: |
+#        docker push $CLIENT_IMAGE_NAME-squashed
+#
+#    - name: Upload arenaclient squashed image as new version
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+#      run: |
+#        docker tag $CLIENT_IMAGE_NAME-squashed $CLIENT_FINAL_IMAGE_NAME
+#        docker push $CLIENT_FINAL_IMAGE_NAME
+#
 #    - name: Upload arenaclient squashed image as latest tag
 #      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
 #      run: |
-#        docker tag aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:latest
-#        docker push aiarena/arenaclient:latest
+#        docker tag $CLIENT_IMAGE_NAME-squashed $CLIENT_LATEST_IMAGE_NAME
+#        docker push $CLIENT_LATEST_IMAGE_NAME

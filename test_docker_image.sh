@@ -5,6 +5,12 @@ export VERSION_NUMBER=${VERSION_NUMBER:-1.0.0}
 export PYTHON_VERSION=${PYTHON_VERSION:-3.9}
 export SC2_VERSION=${SC2_VERSION:-4.10}
 
+# For better readability, set local variables
+BASE_IMAGE_NAME=aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER
+BASE_BUILD_ARGS=--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION
+CLIENT_IMAGE_NAME=aiarena/arenaclient:local
+CLIENT_BUILD_ARGS=--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER
+
 # Allow image squashing by enabling experimental docker features
 # https://stackoverflow.com/a/21164441/10882657
 # https://github.com/actions/virtual-environments/issues/368#issuecomment-582387669
@@ -16,19 +22,19 @@ fi
 
 # SC2LINUXBASE
 # Build images
-docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION - < sc2linuxbase-docker/Dockerfile
+docker build -t $BASE_IMAGE_NAME $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 # Squash image
-#docker build -t aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER-squashed --squash --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION - < sc2linuxbase-docker/Dockerfile
+#docker build -t $BASE_IMAGE_NAME-squashed --squash $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
 # ARENACLIENT
-docker build -t aiarena/arenaclient:local --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER .
+docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS .
 # Squash image
-#docker build -t aiarena/arenaclient:local-squashed --squash --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER .
+#docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS .
 
-# Build arenaclient from squashed base image
-#docker build -t aiarena/arenaclient:local --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER --build-arg USE_SQUASHED="-squashed" .
+# Build arenaclient from squashed base image for even smaller image size
+#docker build -t $CLIENT_IMAGE_NAME $CLIENT_BUILD_ARGS USE_SQUASHED="-squashed" .
 # Squash image
-#docker build -t aiarena/arenaclient:local-squashed --squash --build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER --build-arg USE_SQUASHED="-squashed" .
+#docker build -t $CLIENT_IMAGE_NAME-squashed --squash $CLIENT_BUILD_ARGS --build-arg USE_SQUASHED="-squashed" .
 
 # Delete previous container if it exists
 docker rm -f testcontainer
@@ -40,7 +46,7 @@ docker run -i -d \
   --env SC2_PROXY_BASE=/root/StarCraftII/ \
   --entrypoint /bin/bash \
   --workdir="/root/aiarena-client" \
-  aiarena/arenaclient:local
+  $CLIENT_IMAGE_NAME
 
 # Add maps
 docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps/* /root/StarCraftII/maps"
