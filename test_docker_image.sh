@@ -7,9 +7,9 @@ export SC2_VERSION=${SC2_VERSION:-4.10}
 
 # For better readability, set local variables
 BASE_IMAGE_NAME=aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER
-BASE_BUILD_ARGS=--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION
+BASE_BUILD_ARGS="--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION"
 CLIENT_IMAGE_NAME=aiarena/arenaclient:local
-CLIENT_BUILD_ARGS=--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER
+CLIENT_BUILD_ARGS="--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER"
 
 # Allow image squashing by enabling experimental docker features
 # https://stackoverflow.com/a/21164441/10882657
