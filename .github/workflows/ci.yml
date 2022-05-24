@@ -74,7 +74,7 @@ jobs:
         export VERSION_NUMBER=${{ env.VERSION_NUMBER }}
         export PYTHON_VERSION=${{ env.LATEST_PYTHON_VERSION }}
         export SC2_VERSION=${{ env.LATEST_SC2_VERSION }}
-        sh dockerfiles/test_docker_image.sh
+        sh test_docker_image.sh
 
   build_and_test_docker_images:
     name: Build and test docker images
