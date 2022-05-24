@@ -4,9 +4,11 @@ on: [push, pull_request]
 
 # Version number of the docker images - increment when there are huge changes
 env:
-  VERSION_NUMBER: '1.0.0'
+  VERSION_NUMBER: '1.0.13'
   LATEST_PYTHON_VERSION: '3.9'
   LATEST_SC2_VERSION: '4.10'
+
+# TODO Enable python-version '3.10' in all workflow matrices when https://github.com/aiarena/rust-arenaclient/pull/37 was merged
 
 jobs:
   run_pip_install:
@@ -17,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v1
@@ -50,28 +52,65 @@ jobs:
       run: |
         pip install -r requirements.txt
 
-  build_and_test_docker_images:
-    name: Build and test docker images
+  run_test_docker_image:
+    name: Run test_docker_image.sh
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 35
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Enable experimental docker features
+      run: |
+        echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
+        sudo systemctl restart docker.service
+
+    - name: Run shell script
+      run: |
+        export VERSION_NUMBER=${{ env.VERSION_NUMBER }}
+        export PYTHON_VERSION=${{ env.LATEST_PYTHON_VERSION }}
+        export SC2_VERSION=${{ env.LATEST_SC2_VERSION }}
+        sh dockerfiles/test_docker_image.sh
+
+  build_and_test_docker_images:
+    name: Build and test docker images
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.8', '3.9']
         sc2-version: ['4.10']
     steps:
     - uses: actions/checkout@v1
 
+    - name: Enable experimental docker features
+      run: |
+        echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
+        sudo systemctl restart docker.service
+
     - name: Build sc2 linux base image
       run: |
-        docker build -f sc2linuxbase-docker/Dockerfile -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} .
+        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} - < sc2linuxbase-docker/Dockerfile
+
+    - name: Build squashed sc2 linux base image
+      run: |
+        docker build -t aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} - < sc2linuxbase-docker/Dockerfile
 
     - name: Build arenaclient image
       run: |
-        docker build -t aiarena/arenaclient:temp_image --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+        docker build -t aiarena/arenaclient:local --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
 
-    - name: Run test bots
+    - name: Build squashed arenaclient image from squashed base image
+      run: |
+        docker build -t aiarena/arenaclient:local-squashed --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }} --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
+
+    - name: Run test bots using squashed image
       run: |
         echo "Start container with correct env variables, override the default entrypoint"
         docker run -i -d \
@@ -80,7 +119,7 @@ jobs:
           --env SC2_PROXY_BASE=/root/StarCraftII/ \
           --entrypoint /bin/bash \
           --workdir="/root/aiarena-client" \
-          aiarena/arenaclient:temp_image
+          aiarena/arenaclient:local-squashed
         echo "Adding maps"
         docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
         echo "Adding bots"
@@ -94,24 +133,33 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Upload sc2 linux base image
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: |
-        docker push aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
-
-    - name: Upload sc2 linux base image with latest tag
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-      run: |
-        docker tag aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} aiarena/sc2-linux-base:latest
-        docker push aiarena/sc2-linux-base:latest
+# Does the base image need to be uploaded to docker hub?
+#    - name: Upload sc2 linux base image
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+#      run: |
+#        docker push aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
+#
+#    - name: Upload sc2 linux base image with latest tag
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+#      run: |
+#        docker tag aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} aiarena/sc2-linux-base:latest
+#        docker push aiarena/sc2-linux-base:latest
 
     - name: Upload arenaclient image
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: |
+        docker tag aiarena/arenaclient:local aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
         docker push aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}
 
-    - name: Upload arenaclient image with latest tag
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+    - name: Upload arenaclient squashed image
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: |
-        docker tag aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }} aiarena/arenaclient:latest
-        docker push aiarena/arenaclient:latest
+        docker tag aiarena/arenaclient:local-squashed aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
+        docker push aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed
+
+# TODO Enable when it was made sure that "latest" tag does not get used
+#    - name: Upload arenaclient squashed image as latest tag
+#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+#      run: |
+#        docker tag aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:latest
+#        docker push aiarena/arenaclient:latest
