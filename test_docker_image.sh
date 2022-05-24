@@ -1,7 +1,7 @@
 # This script is meant for development, which produces fresh images and then runs tests
 
 # Set which versions to use
-export VERSION_NUMBER=${VERSION_NUMBER:-1.0.0}
+export VERSION_NUMBER=${VERSION_NUMBER:-0.9.9}
 export PYTHON_VERSION=${PYTHON_VERSION:-3.9}
 export SC2_VERSION=${SC2_VERSION:-4.10}
 

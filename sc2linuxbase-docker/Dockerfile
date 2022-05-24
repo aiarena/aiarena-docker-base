@@ -7,6 +7,10 @@ MAINTAINER AI Arena <staff@aiarena.net>
 # Set sc2 version
 ARG SC2_VERSION=4.10
 
+# Debugging purposes
+RUN echo $PYTHON_VERSION
+RUN echo $SC2_VERSION
+
 USER root
 WORKDIR /root/
 
@@ -59,7 +63,7 @@ RUN dpkg -i packages-microsoft-prod.deb \
     && apt-get update
 
 # Add NET 5.0 runtime
-RUN apt-get install -y dotnet-runtime-5.0
+RUN apt-get install --assume-yes dotnet-runtime-5.0
 
 # Prepare NET 6.0 installation
 ADD https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
@@ -70,7 +74,7 @@ RUN dpkg -i packages-microsoft-prod.deb \
 # Add NET 6.0 runtime
 # https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#2204
 # Don't install aspnetcore-runtime
-RUN apt-get install -y dotnet-runtime-6.0
+RUN apt-get install --assume-yes dotnet-runtime-6.0
 
 # Install Zulu Repo for openjdk-12
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 \
@@ -87,7 +91,7 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded npm
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded wine32
 
 # Upgrade python pip
-RUN pip install --upgrade pip
+RUN pip install --upgrade --no-cache-dir pip
 
 # Install Zulu for Java 16
 RUN wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \

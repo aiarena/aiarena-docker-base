@@ -4,6 +4,12 @@ ARG SC2_VERSION=4.10
 ARG VERSION_NUMBER=1.0.0
 ARG USE_SQUASHED
 
+# Debugging purposes
+RUN echo $PYTHON_VERSION
+RUN echo $SC2_VERSION
+RUN echo $VERSION_NUMBER
+RUN echo $USE_SQUASHED
+
 FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER$USE_SQUASHED
 MAINTAINER AI Arena <staff@aiarena.net>
 
@@ -21,18 +27,18 @@ ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements
 COPY pyproject.toml poetry.lock ./
 
 # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
-RUN pip install poetry
-# Allows the final remove virtual env command
-RUN poetry config virtualenvs.in-project true
-# Merge client requirements into current requirements
-RUN poetry add $(cat client-requirements.txt)
-# Export unified requirements as requirements.txt, this will not include dev dependencies
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
-# Remove virtual environment
-RUN pip uninstall -y poetry
-RUN rm -rf .venv
-# Install requirements.txt globally
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir poetry \
+    # Allows the final remove virtual env command
+    && poetry config virtualenvs.in-project true \
+    # Merge client requirements into current requirements
+    && poetry add $(cat client-requirements.txt) \
+    # Export unified requirements as requirements.txt, this will not include dev dependencies
+    && poetry export -f requirements.txt --output requirements.txt --without-hashes \
+    # Remove virtual environment
+    && pip uninstall -y poetry \
+    && rm -rf .venv \
+    # Install requirements.txt globally
+    && pip install --no-cache-dir -r requirements.txt
 
 # Download the aiarena client to /root/aiarena-client
 # https://stackoverflow.com/a/3946745/10882657

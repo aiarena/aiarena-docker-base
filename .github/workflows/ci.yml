@@ -162,10 +162,9 @@ jobs:
         docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:latest
         docker push aiarena/arenaclient:latest
 
-    - name: Remove local images
+    - name: Remove all local images
       run: |
-        docker rmi $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
-        docker rmi $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
+        docker rmi -f $(docker images -aq)
 
     - name: Build sc2 linux base image
       run: |
