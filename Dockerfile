@@ -15,7 +15,7 @@ RUN echo $USE_SQUASHED
 
 WORKDIR /root/
 
-# Prevent caching unless client master branch changed
+# Prevent caching when client master branch changed
 # https://codehunter.cc/a/git/how-to-prevent-dockerfile-caching-git-clone
 ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
 RUN rm version.json
