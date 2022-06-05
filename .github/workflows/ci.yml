@@ -8,8 +8,6 @@ env:
   LATEST_PYTHON_VERSION: '3.9'
   LATEST_SC2_VERSION: '4.10'
 
-# TODO Enable python-version '3.10' in all workflow matrices when https://github.com/aiarena/rust-arenaclient/pull/37 was merged
-
 jobs:
   run_pip_install:
     name: Merge and install requirements.txt
@@ -19,13 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -62,7 +60,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Enable experimental docker features
       run: |
@@ -86,7 +84,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
         sc2-version: ['4.10']
     env:
       BASE_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}
@@ -94,7 +92,7 @@ jobs:
       BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }}
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Enable experimental docker features
       run: |
