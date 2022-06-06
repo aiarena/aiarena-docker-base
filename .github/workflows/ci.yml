@@ -106,6 +106,8 @@ jobs:
     - name: Build squashed arenaclient image from squashed base image
       run: |
         docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
+        echo "Print docker image sizes"
+        docker images
 
     - name: Run test bots using squashed image
       run: |
@@ -171,6 +173,8 @@ jobs:
     - name: Build arenaclient image
       run: |
         docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+        echo "Print docker image sizes"
+        docker images
 
     - name: Upload arenaclient image
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'

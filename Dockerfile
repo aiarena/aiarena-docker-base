@@ -20,6 +20,10 @@ WORKDIR /root/
 ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
 RUN rm version.json
 
+# procps required to run 'pkill' in rust_arenaclient
+RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
+    procps
+
 # Download python requirements files
 ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
 
@@ -31,14 +35,16 @@ RUN pip install --no-cache-dir poetry \
     # Allows the final remove virtual env command
     && poetry config virtualenvs.in-project true \
     # Merge client requirements into current requirements
-    && poetry add $(cat client-requirements.txt) \
+    && poetry add --lock $(cat client-requirements.txt) \
     # Export unified requirements as requirements.txt, this will not include dev dependencies
     && poetry export -f requirements.txt --output requirements.txt --without-hashes \
-    # Remove virtual environment
+    # Remove virtual environment and uninstall poetry
     && pip uninstall -y poetry \
-    && rm -rf .venv \
+    && rm -rf /root/.venv \
     # Install requirements.txt globally
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    # Remove cache created by poetry and pip
+    && rm -rf /root/.cache
 
 # Download the aiarena client to /root/aiarena-client
 # https://stackoverflow.com/a/3946745/10882657
@@ -64,6 +70,9 @@ ENV HOST=0.0.0.0
 
 # Install the arena client as a module
 RUN python /root/aiarena-client/setup.py install
+
+# Debug: show size of python site-packages folder
+RUN du --max-depth=1 -h /usr/local/lib/*/site-packages | sort -h
 
 # Run the match runner
 ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]

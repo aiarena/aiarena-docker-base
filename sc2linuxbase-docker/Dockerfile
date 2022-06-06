@@ -20,7 +20,8 @@ RUN dpkg --add-architecture i386 \
     && apt-get upgrade --assume-yes --quiet=2 \
     && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     wget \
-    unzip
+    unzip \
+    git
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 # If file is locally available, use this instead:
@@ -39,22 +40,23 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
     # Remove the Maps that come with the SC2 client
     && rm -rf /root/StarCraftII/maps/*
 
-# Install common software
+# Required for Zulu Repo for openjdk-12
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
-    git  \
-    make \
-    gcc \
-    tree \
-    gpg \
-    python-dev \
-    procps \
-    lsof \
-    apt-transport-https \
-    libgtk2.0-dev \
-    software-properties-common \
-    dirmngr \
-    gpg-agent \
-    g++
+    gnupg2 \
+    software-properties-common
+
+# Needed for Java install
+RUN mkdir -p /usr/share/man/man1
+
+# Install Zulu Repo for openjdk-12
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 \
+    && add-apt-repository 'deb http://repos.azulsystems.com/debian stable main' \
+    && apt-get update
+
+# Install Zulu for Java 16
+RUN wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
+    && apt-get install --assume-yes ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
+    && rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb
 
 # Prepare NET 5.0 installation
 ADD https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
@@ -76,14 +78,6 @@ RUN dpkg -i packages-microsoft-prod.deb \
 # Don't install aspnetcore-runtime
 RUN apt-get install --assume-yes dotnet-runtime-6.0
 
-# Install Zulu Repo for openjdk-12
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 \
-    && add-apt-repository 'deb http://repos.azulsystems.com/debian stable main' \
-    && apt-get update
-
-# Needed for Java install
-RUN mkdir -p /usr/share/man/man1
-
 # Install nodejs
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded npm
 
@@ -92,8 +86,3 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded wine
 
 # Upgrade python pip
 RUN pip install --upgrade --no-cache-dir pip
-
-# Install Zulu for Java 16
-RUN wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-    && apt-get install --assume-yes ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-    && rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb
