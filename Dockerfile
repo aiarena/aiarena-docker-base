@@ -1,44 +1,69 @@
 # Sets up ai-arena client
+ARG PYTHON_VERSION=3.9
+ARG SC2_VERSION=4.10
+ARG VERSION_NUMBER=1.0.0
+ARG USE_SQUASHED
 
-FROM aiarena/sc2-linux-base:latest
+FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER$USE_SQUASHED
 MAINTAINER AI Arena <staff@aiarena.net>
 
-# Create a symlink for the maps directory
-# Remove the Maps that come with the SC2 client
-RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps && rm -Rf /root/StarCraftII/maps/*
+# Debugging purposes
+RUN echo $PYTHON_VERSION
+RUN echo $SC2_VERSION
+RUN echo $VERSION_NUMBER
+RUN echo $USE_SQUASHED
 
-# Calls for a random number to break the cahing of the git clone
-# (https://stackoverflow.com/questions/35134713/disable-cache-for-specific-run-commands/58801213#58801213)
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+WORKDIR /root/
+
+# Prevent caching when client master branch changed
+# https://codehunter.cc/a/git/how-to-prevent-dockerfile-caching-git-clone
+ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
+RUN rm version.json
 
 # Download python requirements files
-RUN wget https://github.com/aiarena/aiarena-client/raw/master/requirements.txt -O client-requirements.txt
-COPY requirements.txt bot-requirements.txt
+ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
 
-# Install python modules
-RUN pip3.9 install -r client-requirements.txt && pip3.9 install -r bot-requirements.txt
+# Add local pyproject.toml and poetry.lock which contain bot requirements
+COPY pyproject.toml poetry.lock ./
 
-# Download the aiarena client
-RUN git clone https://github.com/aiarena/aiarena-client.git aiarena-client
+# Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
+RUN pip install --no-cache-dir poetry \
+    # Allows the final remove virtual env command
+    && poetry config virtualenvs.in-project true \
+    # Merge client requirements into current requirements
+    && poetry add $(cat client-requirements.txt) \
+    # Export unified requirements as requirements.txt, this will not include dev dependencies
+    && poetry export -f requirements.txt --output requirements.txt --without-hashes \
+    # Remove virtual environment
+    && pip uninstall -y poetry \
+    && rm -rf .venv \
+    # Install requirements.txt globally
+    && pip install --no-cache-dir -r requirements.txt
+
+# Download the aiarena client to /root/aiarena-client
+# https://stackoverflow.com/a/3946745/10882657
+RUN wget --quiet --show-progress --progress=bar:force https://github.com/aiarena/aiarena-client/archive/refs/heads/master.zip \
+    && unzip -q master.zip \
+    && mv aiarena-client-master aiarena-client \
+    && rm master.zip
 
 # Create bot users
+RUN useradd -ms /bin/bash bot_player1 \
+    && useradd -ms /bin/bash bot_player2
+
 # Create Bot and Replay directories
-RUN useradd -ms /bin/bash bot_player1 && useradd -ms /bin/bash bot_player2 && mkdir -p /root/aiarena-client/Bots && mkdir -p /root/aiarena-client/Replays
+RUN mkdir -p /root/aiarena-client/Bots \
+    && mkdir -p /root/aiarena-client/Replays
 
 # Change to working directory
 WORKDIR /root/aiarena-client/
 
 # Add Pythonpath to env
 ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
-ENV HOST 0.0.0.0
+ENV HOST=0.0.0.0
 
 # Install the arena client as a module
-RUN python3.9 /root/aiarena-client/setup.py install
-
-# Add Pythonpath to env
-ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
-
-WORKDIR /root/aiarena-client/
+RUN python /root/aiarena-client/setup.py install
 
 # Run the match runner
 ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]
