@@ -2,7 +2,7 @@
 
 # Set which versions to use
 export VERSION_NUMBER=${VERSION_NUMBER:-0.9.9}
-export PYTHON_VERSION=${PYTHON_VERSION:-3.9}
+export PYTHON_VERSION=${PYTHON_VERSION:-3.10}
 export SC2_VERSION=${SC2_VERSION:-4.10}
 
 # For better readability, set local variables
