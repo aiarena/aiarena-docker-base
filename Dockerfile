@@ -22,7 +22,9 @@ RUN rm version.json
 
 # procps required to run 'pkill' in rust_arenaclient
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
-    procps
+    procps \
+    # gcc required to build wheels of some packages on new python versions
+    gcc
 
 # Download python requirements files
 ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
