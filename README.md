@@ -7,7 +7,7 @@ If you're just looking for a way to play local matches using docker, check out t
 
 ## Build
 
-For general usage, we advise against building the image your - use the docker pull command above instead.  
+For general usage, we advise against building the image yourself - refer to the local-play-bootstrap above instead.  
 Use the following command to build image with name `aiarena`:
 
 ```
