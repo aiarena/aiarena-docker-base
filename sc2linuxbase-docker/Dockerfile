@@ -15,13 +15,14 @@ USER root
 WORKDIR /root/
 
 # Update system
-RUN dpkg --add-architecture i386 \
-    && apt-get update \
+RUN apt-get update \
     && apt-get upgrade --assume-yes --quiet=2 \
     && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     wget \
     unzip \
-    git
+    gnupg2 \
+    software-properties-common \
+    libosmesa6-dev
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 # If file is locally available, use this instead:
@@ -40,11 +41,6 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
     # Remove the Maps that come with the SC2 client
     && rm -rf /root/StarCraftII/maps/*
 
-# Required for Zulu Repo for openjdk-12
-RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
-    gnupg2 \
-    software-properties-common
-
 # Needed for Java install
 RUN mkdir -p /usr/share/man/man1
 
@@ -53,30 +49,19 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361
     && add-apt-repository 'deb http://repos.azulsystems.com/debian stable main' \
     && apt-get update
 
-# Install Zulu for Java 16
-RUN wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-    && apt-get install --assume-yes ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb \
-    && rm ./zulu16.30.15-ca-jre16.0.1-linux_amd64.deb
+# Install Zulu for Java 17
+RUN wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
+    && apt-get install --assume-yes ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
+    && rm ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb
 
-# Prepare NET 5.0 installation
-ADD https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
+# Prepare NET installation
+ADD https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb packages-microsoft-prod.deb
 RUN dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update
 
-# Add NET 5.0 runtime
-RUN apt-get install --assume-yes dotnet-runtime-5.0
-
-# Prepare NET 6.0 installation
-ADD https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb \
-    && rm packages-microsoft-prod.deb \
-    && apt-get update
-
-# Add NET 6.0 runtime
-# https://docs.microsoft.com/en-us/dotnet/core/install/linux-ubuntu#2204
-# Don't install aspnetcore-runtime
-RUN apt-get install --assume-yes dotnet-runtime-6.0
+# Add NET runtimes
+RUN apt-get install --assume-yes dotnet-runtime-5.0 dotnet-runtime-6.0
 
 # Install nodejs
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded npm
@@ -86,3 +71,7 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded wine
 
 # Upgrade python pip
 RUN pip install --upgrade --no-cache-dir pip
+
+RUN apt remove --yes gnupg2 \
+    software-properties-common\ 
+    && apt autoremove --yes
