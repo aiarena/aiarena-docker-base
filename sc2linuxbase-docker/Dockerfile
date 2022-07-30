@@ -66,8 +66,6 @@ RUN apt-get install --assume-yes dotnet-runtime-5.0 dotnet-runtime-6.0
 # Install nodejs
 RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded npm
 
-# Install wine
-RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded wine32
 
 # Upgrade python pip
 RUN pip install --upgrade --no-cache-dir pip
