@@ -22,7 +22,8 @@ RUN apt-get update \
     unzip \
     gnupg2 \
     software-properties-common \
-    libosmesa6-dev
+    libosmesa6-dev \
+    git
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 # If file is locally available, use this instead:
