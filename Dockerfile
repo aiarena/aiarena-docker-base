@@ -76,5 +76,9 @@ RUN python /root/aiarena-client/setup.py install
 # Debug: show size of python site-packages folder
 RUN du --max-depth=1 -h /usr/local/lib/*/site-packages | sort -h
 
+RUN apt remove --yes wget \
+    unzip \
+    g++ && apt autoremove --yes
+    
 # Run the match runner
 ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]
