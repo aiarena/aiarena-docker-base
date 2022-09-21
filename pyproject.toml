@@ -52,7 +52,7 @@ uvloop = "^0.16.0"
 virtualenv = "^20.14.1"
 virtualenv-clone = "^0.5.7"
 websockets = "^10.3"
-yarl = "^1.7.2"
+yarl = "^1.8.1"
 
 [tool.poetry.dev-dependencies]
 
