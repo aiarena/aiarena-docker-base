@@ -6,7 +6,9 @@ export PYTHON_VERSION=${PYTHON_VERSION:-3.10}
 export SC2_VERSION=${SC2_VERSION:-4.10}
 
 # For better readability, set local variables
+BASE_BASE_IMAGE_NAME=aiarena/sc2-linux-base:base-py_$PYTHON_VERSION
 BASE_IMAGE_NAME=aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER
+BASE_BASE_BUILD_ARGS="--build-arg PYTHON_VERSION=$PYTHON_VERSION"
 BASE_BUILD_ARGS="--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION"
 CLIENT_IMAGE_NAME=aiarena/arenaclient:local
 CLIENT_BUILD_ARGS="--build-arg PYTHON_VERSION=$PYTHON_VERSION --build-arg SC2_VERSION=$SC2_VERSION --build-arg VERSION_NUMBER=$VERSION_NUMBER"
@@ -22,6 +24,7 @@ fi
 
 # SC2LINUXBASE
 # Build images
+docker build -t $BASE_BASE_IMAGE_NAME $BASE_BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile.base
 docker build -t $BASE_IMAGE_NAME $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 # Squashed image
 #docker build -t $BASE_IMAGE_NAME-squashed --squash $BASE_BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
