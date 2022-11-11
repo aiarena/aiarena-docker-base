@@ -101,7 +101,7 @@ jobs:
     
     - name: Build the base of the sc2 linux base image
       run: |
-        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
+        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --squash --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
 
     - name: Build squashed sc2 linux base image
       run: |
@@ -191,6 +191,10 @@ jobs:
     - name: Remove all local images
       run: |
         docker rmi -f $(docker images -aq)
+    
+    - name: Build the base of the sc2 linux base image
+      run: |
+        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
 
     - name: Build master sc2 linux base image
       run: |
