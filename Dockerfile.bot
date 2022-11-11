@@ -4,7 +4,7 @@ ARG SC2_VERSION=4.10
 ARG VERSION_NUMBER=1.0.0
 ARG USE_SQUASHED
 
-FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-v$VERSION_NUMBER$USE_SQUASHED
+FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-bot-v$VERSION_NUMBER$USE_SQUASHED
 LABEL AI Arena <staff@aiarena.net>
 
 WORKDIR /root/
@@ -13,6 +13,7 @@ WORKDIR /root/
 # https://codehunter.cc/a/git/how-to-prevent-dockerfile-caching-git-clone
 ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
 RUN rm version.json
+
 
 # Download python requirements files
 ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
@@ -60,9 +61,6 @@ ENV HOST=0.0.0.0
 
 # Install the arena client as a module
 RUN python /root/aiarena-client/setup.py install
-
-# Debug: show size of python site-packages folder
-RUN du --max-depth=1 -h /usr/local/lib/*/site-packages | sort -h
 
 RUN apt remove --yes wget \
     unzip \

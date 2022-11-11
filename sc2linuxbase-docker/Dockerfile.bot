@@ -4,9 +4,6 @@ ARG PYTHON_VERSION=3.9
 FROM aiarena/sc2-linux-base:base-py_$PYTHON_VERSION
 LABEL AI Arena <staff@aiarena.net>
 
-# Set sc2 version
-ARG SC2_VERSION=4.10
-
 USER root
 WORKDIR /root/
 
@@ -15,22 +12,6 @@ RUN apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     gnupg2 \
     software-properties-common
 
-# Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
-# If file is locally available, use this instead:
-#COPY SC2.4.10.zip /root/
-RUN wget --quiet --show-progress --progress=bar:force http://blzdistsc2-a.akamaihd.net/Linux/SC2.$SC2_VERSION.zip \
-    && unzip -q -P iagreetotheeula SC2.$SC2_VERSION.zip \
-    && rm SC2.$SC2_VERSION.zip
-
-# Remove Battle.net folder
-RUN rm -rf /root/StarCraftII/Battle.net/* \
-    # Remove Shaders folder
-    && rm -rf /root/StarCraftII/Versions/Shaders*
-
-# Create a symlink for the maps directory
-RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
-    # Remove the Maps that come with the SC2 client
-    && rm -rf /root/StarCraftII/maps/*
 
 # Needed for Java install
 RUN mkdir -p /usr/share/man/man1
@@ -58,7 +39,6 @@ RUN apt-get install --assume-yes dotnet-runtime-5.0 dotnet-runtime-6.0
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash
 
 RUN apt install --assume-yes --no-install-recommends --no-show-upgraded nodejs
-
 
 # Upgrade python pip
 RUN pip install --upgrade --no-cache-dir pip

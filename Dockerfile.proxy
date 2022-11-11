@@ -1,0 +1,45 @@
+# Sets up ai-arena client
+ARG PYTHON_VERSION=3.9
+ARG SC2_VERSION=4.10
+ARG VERSION_NUMBER=1.0.0
+ARG USE_SQUASHED
+
+FROM aiarena/sc2-linux-base:py_$PYTHON_VERSION-sc2_$SC2_VERSION-proxy-v$VERSION_NUMBER$USE_SQUASHED
+LABEL AI Arena <staff@aiarena.net>
+
+WORKDIR /root/
+
+# Prevent caching when client master branch changed
+# https://codehunter.cc/a/git/how-to-prevent-dockerfile-caching-git-clone
+ADD https://api.github.com/repos/aiarena/aiarena-client/git/refs/heads/master version.json
+RUN rm version.json
+
+
+ADD https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt client-requirements.txt
+
+RUN pip install -r client-requirements.txt
+# Download the aiarena client to /root/aiarena-client
+# https://stackoverflow.com/a/3946745/10882657
+RUN wget --quiet --show-progress --progress=bar:force https://github.com/aiarena/aiarena-client/archive/refs/heads/master.zip \
+    && unzip -q master.zip \
+    && mv aiarena-client-master aiarena-client \
+    && rm master.zip
+
+
+# Change to working directory
+WORKDIR /root/aiarena-client/
+
+# Add Pythonpath to env
+ENV PYTHONPATH=/root/aiarena-client/:/root/aiarena-client/arenaclient/
+ENV HOST=0.0.0.0
+
+# Install the arena client as a module
+RUN python /root/aiarena-client/setup.py install
+
+
+RUN apt remove --yes wget \
+    unzip \
+    g++ && apt autoremove --yes
+    
+# Run the match runner
+ENTRYPOINT [ "timeout", "120m", "/usr/local/bin/python3.9", "-m", "arenaclient" ]

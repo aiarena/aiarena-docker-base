@@ -98,6 +98,10 @@ jobs:
       run: |
         echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
         sudo systemctl restart docker.service
+    
+    - name: Build the base of the sc2 linux base image
+      run: |
+        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
 
     - name: Build squashed sc2 linux base image
       run: |
@@ -126,6 +130,16 @@ jobs:
         echo "Starting tests"
         docker exec -i testcontainer bash -c "python -m arenaclient --test"
         docker rm -f testcontainer
+        
+    - name: Build squashed arenaclient proxy image from squashed base image
+      run: |
+        docker build -t $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
+
+    - name: Build squashed arenaclient bot image from squashed base image
+      run: |
+        docker build -t $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
+        echo "Print docker image sizes"
+        docker images
 
     - name: Login to DockerHub
       uses: docker/login-action@v2
@@ -155,6 +169,18 @@ jobs:
       run: |
         docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
         docker push aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
+    
+    - name: Upload bot arenaclient squashed image as new version
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+      run: |
+        docker tag $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-bot-${{ env.VERSION_NUMBER }}
+        docker push aiarena/arenaclient:version-bot-${{ env.VERSION_NUMBER }}
+    
+    - name: Upload proxy arenaclient squashed image as new version
+      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
+      run: |
+        docker tag $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-proxy-${{ env.VERSION_NUMBER }}
+        docker push aiarena/arenaclient:version-proxy-${{ env.VERSION_NUMBER }}
 
     - name: Upload arenaclient squashed image as latest tag
       if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
@@ -166,13 +192,29 @@ jobs:
       run: |
         docker rmi -f $(docker images -aq)
 
-    - name: Build sc2 linux base image
+    - name: Build master sc2 linux base image
       run: |
         docker build -t $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
 
-    - name: Build arenaclient image
+    - name: Build bot sc2 linux base image
+      run: |
+        docker build -t $BASE_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile.bot
+
+    - name: Build proxy sc2 linux base image
+      run: |
+        docker build -t $BASE_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile.proxy
+
+    - name: Build master arenaclient image
       run: |
         docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+    
+    - name: Build bot arenaclient image
+      run: |
+        docker build -f Dockerfile.bot -t $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+      
+    - name: Build proxy arenaclient image
+      run: |
+        docker build -f Dockerfile.proxy -t $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
         echo "Print docker image sizes"
         docker images
 
@@ -180,4 +222,6 @@ jobs:
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: |
         docker push $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}
+        docker push $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}
+        docker push $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}
 

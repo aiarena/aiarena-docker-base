@@ -1,0 +1,22 @@
+# Set python version
+ARG PYTHON_VERSION=3.9
+
+FROM python:$PYTHON_VERSION-slim
+LABEL AI Arena <staff@aiarena.net>
+
+USER root
+WORKDIR /root/
+
+# Update system
+RUN apt-get update \
+    && apt-get upgrade --assume-yes --quiet=2 \
+    && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
+    wget \
+    unzip \
+    git \
+    procps \
+    # Required to build wheels of some packages on new python versions
+    g++
+
+# Upgrade python pip
+RUN pip install --upgrade --no-cache-dir pip
