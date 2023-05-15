@@ -2,8 +2,6 @@ name: Build and push docker images
 
 on: 
   push:
-    branches:
-      - "master"
   pull_request:
     branches:
       - "master"
@@ -73,5 +71,5 @@ jobs:
     - name: Push versioned images
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: BOT_VERSION="${{ env.BOT_VERSION }}" PYTHON_VERSION="${{ env.PYTHON_VERSION }}" SC2_VERSION="${{ env.SC2_VERSION }}" docker compose -f docker/docker-compose.yml push --ignore-push-failures
-      
+
 
