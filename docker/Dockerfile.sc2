@@ -1,22 +1,21 @@
-# Set python version
-ARG PYTHON_VERSION=3.9
-
-FROM aiarena/sc2-linux-base:base-py_$PYTHON_VERSION
+FROM debian:bullseye-slim
 LABEL AI Arena <staff@aiarena.net>
-
-# Set sc2 version
-ARG SC2_VERSION=4.10
 
 USER root
 WORKDIR /root/
 
+RUN apt-get update \
+    && apt-get upgrade --assume-yes --quiet=2 \
+    && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
+    wget \
+    unzip
 
 # Download and uncompress StarCraftII from https://github.com/Blizzard/s2client-proto#linux-packages and remove zip file
 # If file is locally available, use this instead:
 #COPY SC2.4.10.zip /root/
-RUN wget --quiet --show-progress --progress=bar:force http://blzdistsc2-a.akamaihd.net/Linux/SC2.$SC2_VERSION.zip \
-    && unzip -q -P iagreetotheeula SC2.$SC2_VERSION.zip \
-    && rm SC2.$SC2_VERSION.zip
+RUN wget --quiet --show-progress --progress=bar:force http://blzdistsc2-a.akamaihd.net/Linux/SC2.4.10.zip \
+    && unzip -q -P iagreetotheeula SC2.4.10.zip \
+    && rm SC2.4.10.zip
 
 # Remove Battle.net folder
 RUN rm -rf /root/StarCraftII/Battle.net/* \
@@ -29,7 +28,6 @@ RUN ln -s /root/StarCraftII/Maps /root/StarCraftII/maps \
     && rm -rf /root/StarCraftII/maps/*
 
 
-# Upgrade python pip
-RUN pip install --upgrade --no-cache-dir pip
-
-RUN apt autoremove --yes
+RUN apt remove --yes wget \
+    unzip \ 
+    && apt autoremove --yes

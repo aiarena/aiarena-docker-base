@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  sc2:
+    restart: unless-stopped
+    image: aiarena/arenaclient-sc2-base:${SC2_VERSION:-latest}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.sc2
+      args:
+        SC2_VERSION: "${SC2_VERSION}"
+
+  bot:
+    restart: unless-stopped
+    image: aiarena/arenaclient-bot-base:${BOT_VERSION:-latest}
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.bot
+      args:
+        PYTHON_VERSION: "${PYTHON_VERSION}"

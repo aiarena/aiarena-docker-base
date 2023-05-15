@@ -1,12 +1,18 @@
 name: Build and push docker images
 
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
 
 # Version number of the docker images - increment when there are huge changes
 env:
-  VERSION_NUMBER: '1.1.3'
-  LATEST_PYTHON_VERSION: '3.9'
-  LATEST_SC2_VERSION: '4.10'
+  BOT_VERSION: 'v0.2'
+  PYTHON_VERSION: '3.9'
+  SC2_VERSION: '4.10'
 
 jobs:
   run_pip_install:
@@ -17,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v2
@@ -29,16 +35,8 @@ jobs:
 
     - name: Install Poetry
       run: |
-        python -m pip install poetry
+        python -m pip install poetry wheel
         poetry config virtualenvs.in-project true
-
-    - name: Get client requirements.txt
-      run: |
-        wget https://raw.githubusercontent.com/aiarena/aiarena-client/master/requirements.txt -O client-requirements.txt
-
-    - name: Install client requirements.txt
-      run: |
-        poetry add $(cat client-requirements.txt)
 
     - name: Export requirements.txt
       run: |
@@ -50,33 +48,8 @@ jobs:
       run: |
         pip install -r requirements.txt
 
-  run_test_docker_image:
-    name: Run test_docker_image.sh
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Enable experimental docker features
-      run: |
-        echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
-        sudo systemctl restart docker.service
-
-    - name: Run shell script
-      env:
-        VERSION_NUMBER: ${{ env.VERSION_NUMBER }}
-        PYTHON_VERSION: ${{ env.LATEST_PYTHON_VERSION }}
-        SC2_VERSION: ${{ env.LATEST_SC2_VERSION }}
-      run: |
-        sh test_docker_image.sh
-
   # As disk space is limited, the strategy is to build the squashed images, run tests on them, push them to docker hub, remove the images and build non-squashed images and push those
-  build_and_test_docker_images:
+  build_docker_images:
     name: Build and test docker images
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -84,148 +57,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.8', '3.9', '3.10']
-        sc2-version: ['4.10']
-    env:
-      BASE_IMAGE_NAME: aiarena/sc2-linux-base:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}
-      CLIENT_IMAGE_NAME: aiarena/arenaclient:py_${{ matrix.python-version }}-sc2_${{ matrix.sc2-version }}
-      BUILD_ARGS: --build-arg PYTHON_VERSION=${{ matrix.python-version }} --build-arg SC2_VERSION=${{ matrix.sc2-version }}
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Enable experimental docker features
-      run: |
-        echo $'{\n    "experimental": true\n}' | sudo tee /etc/docker/daemon.json
-        sudo systemctl restart docker.service
-    
-    - name: Build the base of the sc2 linux base image
-      run: |
-        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --squash --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
-
-    - name: Build squashed sc2 linux base image
-      run: |
-        docker build -t $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
-
-    - name: Build squashed arenaclient image from squashed base image
-      run: |
-        docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
-        echo "Print docker image sizes"
-        docker images
-
-    - name: Run test bots using squashed image
-      run: |
-        echo "Start container with correct env variables, override the default entrypoint"
-        docker run -i -d \
-          --name testcontainer \
-          --env SC2_PROXY_BIN=SC2_x64 \
-          --env SC2_PROXY_BASE=/root/StarCraftII/ \
-          --entrypoint /bin/bash \
-          --workdir="/root/aiarena-client" \
-          $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
-        echo "Adding maps"
-        docker exec -i testcontainer bash -c "cp -R /root/aiarena-client/testing/maps /root/StarCraftII/maps"
-        echo "Adding bots"
-        docker exec -i testcontainer bash -c "git clone https://github.com/aiarena/aiarena-test-bots testing/aiarena-test-bots"
-        echo "Starting tests"
-        docker exec -i testcontainer bash -c "python -m arenaclient --test"
-        docker rm -f testcontainer
-        
-    - name: Build squashed arenaclient proxy image from squashed base image
-      run: |
-        docker build -t $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
-
-    - name: Build squashed arenaclient bot image from squashed base image
-      run: |
-        docker build -t $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}-squashed --squash $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} --build-arg USE_SQUASHED="-squashed" .
-        echo "Print docker image sizes"
-        docker images
 
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: "Build the docker-compose stack with version"
+      run: PYTHON_VERSION="${{ env.PYTHON_VERSION }}" SC2_VERSION="${{ env.SC2_VERSION }}" docker compose -f docker/docker-compose.yml build
 
-# Does the base image need to be uploaded to docker hub?
-#    - name: Upload squashed sc2 linux base image
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-#      run: |
-#        docker push $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
-#
-#    - name: Upload sc2 linux base image with latest tag
-#      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-#      run: |
-#        docker tag $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/sc2-linux-base:latest
-#        docker push aiarena/sc2-linux-base:latest
-
-    - name: Upload arenaclient squashed image
+    - name: Push versioned images
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: |
-        docker push $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed
-
-    - name: Upload arenaclient squashed image as new version
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-      run: |
-        docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
-        docker push aiarena/arenaclient:version-${{ env.VERSION_NUMBER }}
-    
-    - name: Upload bot arenaclient squashed image as new version
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-      run: |
-        docker tag $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-bot-${{ env.VERSION_NUMBER }}
-        docker push aiarena/arenaclient:version-bot-${{ env.VERSION_NUMBER }}
-    
-    - name: Upload proxy arenaclient squashed image as new version
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-      run: |
-        docker tag $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:version-proxy-${{ env.VERSION_NUMBER }}
-        docker push aiarena/arenaclient:version-proxy-${{ env.VERSION_NUMBER }}
-
-    - name: Upload arenaclient squashed image as latest tag
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push' && matrix.python-version == env.LATEST_PYTHON_VERSION && matrix.sc2-version == env.LATEST_SC2_VERSION
-      run: |
-        docker tag $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}-squashed aiarena/arenaclient:latest
-        docker push aiarena/arenaclient:latest
-
-    - name: Remove all local images
-      run: |
-        docker rmi -f $(docker images -aq)
-    
-    - name: Build the base of the sc2 linux base image
-      run: |
-        docker build -t aiarena/sc2-linux-base:base-py_${{ matrix.python-version }} --build-arg PYTHON_VERSION=${{ matrix.python-version }} - < sc2linuxbase-docker/Dockerfile.base
-
-    - name: Build master sc2 linux base image
-      run: |
-        docker build -t $BASE_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile
-
-    - name: Build bot sc2 linux base image
-      run: |
-        docker build -t $BASE_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile.bot
-
-    - name: Build proxy sc2 linux base image
-      run: |
-        docker build -t $BASE_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }} $BUILD_ARGS - < sc2linuxbase-docker/Dockerfile.proxy
-
-    - name: Build master arenaclient image
-      run: |
-        docker build -t $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
-    
-    - name: Build bot arenaclient image
-      run: |
-        docker build -f Dockerfile.bot -t $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
+      run: BOT_VERSION="${{ env.BOT_VERSION }}" PYTHON_VERSION="${{ env.PYTHON_VERSION }}" SC2_VERSION="${{ env.SC2_VERSION }}" docker compose -f docker/docker-compose.yml push --ignore-push-failures
       
-    - name: Build proxy arenaclient image
-      run: |
-        docker build -f Dockerfile.proxy -t $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }} $BUILD_ARGS --build-arg VERSION_NUMBER=${{ env.VERSION_NUMBER }} .
-        echo "Print docker image sizes"
-        docker images
-
-    - name: Upload arenaclient image
-      if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-      run: |
-        docker push $CLIENT_IMAGE_NAME-v${{ env.VERSION_NUMBER }}
-        docker push $CLIENT_IMAGE_NAME-proxy-v${{ env.VERSION_NUMBER }}
-        docker push $CLIENT_IMAGE_NAME-bot-v${{ env.VERSION_NUMBER }}
 
