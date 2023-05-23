@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.11
 
 FROM python:$PYTHON_VERSION-slim-bullseye
 LABEL AI Arena <staff@aiarena.net>
@@ -15,7 +15,10 @@ RUN apt-get update \
     git \
     procps \
     # Required to build wheels of some packages on new python versions
-    g++
+    g++ \
+    ffmpeg \
+    libsm6 \
+    libxext6 
 
 
 # Needed for Java install
@@ -38,7 +41,10 @@ RUN dpkg -i packages-microsoft-prod.deb \
     && apt-get update
 
 # Add NET runtimes
-RUN apt-get install --assume-yes dotnet-runtime-5.0 dotnet-runtime-6.0 dotnet-runtime-7.0
+RUN apt-get install --assume-yes dotnet-runtime-5.0 dotnet-runtime-6.0 dotnet-sdk-7.0
+
+# Install ML.NET
+RUN dotnet tool install -g mlnet-linux-x64
 
 # Install nodejs
 RUN wget -qO- https://deb.nodesource.com/setup_16.x | bash -
@@ -51,7 +57,7 @@ RUN pip install --upgrade --no-cache-dir pip
 # Add local pyproject.toml and poetry.lock which contain bot requirements
 COPY pyproject.toml poetry.lock ./
 
-# Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
+# # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
 RUN pip install --no-cache-dir poetry \
     # Allows the final remove virtual env command
     && poetry config virtualenvs.in-project true \
@@ -61,7 +67,7 @@ RUN pip install --no-cache-dir poetry \
     && pip uninstall -y poetry \
     && rm -rf /root/.venv \
     # Install requirements.txt globally
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt \
     # Remove cache created by poetry and pip
     && rm -rf /root/.cache \
     && rm -rf poetry.lock \
