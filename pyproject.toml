@@ -35,18 +35,18 @@ pyyaml = "^6.0"
 python-utils = "^3.5.2"
 requests = "^2.30.1"
 s2clientprotocol = "^5.0.9"
-scikit-image = "^0.20.0"
+scikit-image = "^0.21.0"
 scikit-learn = "^1.2.0"
 scipy = "^1.10.1"
 six = "^1.16.0"
 sqlalchemy = "^1.4.48"
 stable-baselines3 = "*"
-tensorflow = "^2.12.0"
+tensorflow-cpu = "^2.12.0"
 termcolor = "^1.1.0"
 theano = "^1.0.5"
-torch = "^2.0.1"
+torch =  {version = "^2.0.1", source = "torch-cpu"}
 torch-optimizer = "^0.3.0"
-torchvision = "^0.15.0"
+torchvision =  {version = "^0.15.0", source = "torch-cpu"}
 tqdm = "^4.64.0"
 urllib3 = "^1.26.15"
 uvloop = "^0.17.0"
@@ -60,3 +60,8 @@ yarl = "^1.9.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+ name = "torch-cpu"
+ url = "https://download.pytorch.org/whl/cpu"
+ priority = "explicit"
