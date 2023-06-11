@@ -87,6 +87,43 @@ RUN git clone https://github.com/Blizzard/s2client-proto.git && \
     cd .. \
     && rm -rf s2client-proto
 
+
+# START: RUBY
+ARG RUBY_VERSION=3.2.2
+
+# Install ruby via rbenv to get around debian 2.x lock
+# Rust required to compile ruby's YJIT optimizer. NB!
+RUN wget -q https://sh.rustup.rs -O- | sh -s -- -y
+# ruby-build dependencies
+RUN apt install --assume-yes autoconf patch build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev
+
+# rbenv to target specific version
+ENV RBENV_ROOT "/usr/local/rbenv"
+RUN git clone https://github.com/rbenv/rbenv.git $RBENV_ROOT
+RUN git clone https://github.com/rbenv/ruby-build.git $RBENV_ROOT/plugins/ruby-build
+ENV PATH="$RBENV_ROOT/shims:$RBENV_ROOT/bin:$PATH"
+
+# Compile ruby and set as global
+RUN export PATH="$PATH:/root/.cargo/bin"; rbenv install $RUBY_VERSION --verbose
+RUN rbenv global $RUBY_VERSION
+# Test if it worked
+RUN ruby -v --yjit
+
+# Cleanup: Remove Rust compiler
+RUN /root/.cargo/bin/rustup self uninstall -y
+
+# ruby: Add package manager and gems required by bot libs
+RUN gem install bundler
+COPY Gemfile ./
+RUN bundle install
+
+# Cleanup: Remove installed ruby-build dependencies
+RUN apt remove --assume-yes autoconf patch build-essential \
+    && rm -f Gemfile \
+    && rm -f Gemfile.lock
+# END: RUBY
+
+
 RUN apt remove --yes wget \
     unzip \
     gnupg2 \
