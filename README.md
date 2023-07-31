@@ -1,18 +1,12 @@
-# aiarena-docker
-https://hub.docker.com/r/aiarena/arenaclient
+# aiarena-docker-base
+
+https://hub.docker.com/r/aiarena/
+
+A collection of base images used by the [AI Arena match controller](https://github.com/aiarena/sc2-ai-match-controller).
 
 ## Local play
 
 If you're just looking for a way to play local matches using docker, check out the [local-play-bootstrap](https://github.com/aiarena/local-play-bootstrap).
-
-## Build
-
-For general usage, we advise against building the image yourself - refer to the local-play-bootstrap above instead.  
-Use the following command to build image with name `aiarena`:
-
-```
-docker build -t aiarena/arenaclient:latest --build-arg PYTHON_VERSION=3.9 --build-arg SC2_VERSION=4.10 --build-arg VERSION_NUMBER=1.0.0 .
-```
 
 ## Tests
 
