@@ -1,6 +1,10 @@
 # aiarena-docker
 https://hub.docker.com/r/aiarena/arenaclient
 
+## Archived
+
+The AI Arena infrastructure now runs on [https://github.com/aiarena/sc2-ai-match-controller](https://github.com/aiarena/sc2-ai-match-controller)
+
 ## Local play
 
 If you're just looking for a way to play local matches using docker, check out the [local-play-bootstrap](https://github.com/aiarena/local-play-bootstrap).
