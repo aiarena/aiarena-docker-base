@@ -6,7 +6,7 @@ authors = ["AI Arena <staff@aiarena.net>"]
 
 [tool.poetry.dependencies]
 python = ">=3.8 <3.11"
-aiohttp = "^3.7.4"
+aiohttp = "^3.8.6"
 aiohttp-jinja2 = "^1.5"
 attrs = "^21.4.0"
 burnysc2 = "^6.0.0"
