@@ -95,7 +95,25 @@ ARG RUBY_VERSION=3.2.2
 # Rust required to compile ruby's YJIT optimizer. NB!
 RUN wget -q https://sh.rustup.rs -O- | sh -s -- -y
 # ruby-build dependencies
-RUN apt install --assume-yes autoconf patch build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev
+RUN apt-get install -y --no-install-recommends bison \
+                                 dpkg-dev \
+                                 libgdbm-dev \
+                                 ruby \
+                                 autoconf \
+                                 g++ \
+                                 gcc \
+                                 libbz2-dev \
+                                 libgdbm-compat-dev \
+                                 libglib2.0-dev \
+                                 libncurses-dev \
+                                 libreadline-dev \
+                                 libxml2-dev \
+                                 libxslt-dev \
+                                 make \
+                                 wget \
+                                 xz-utils\
+                                 libyaml-dev
+
 
 # rbenv to target specific version
 ENV RBENV_ROOT "/usr/local/rbenv"
@@ -104,7 +122,10 @@ RUN git clone https://github.com/rbenv/ruby-build.git $RBENV_ROOT/plugins/ruby-b
 ENV PATH="$RBENV_ROOT/shims:$RBENV_ROOT/bin:$PATH"
 
 # Compile ruby and set as global
-RUN export PATH="$PATH:/root/.cargo/bin"; rbenv install $RUBY_VERSION --verbose
+RUN rbenv global system
+RUN rbenv rehash
+RUN mkdir -p /usr/local/rbenv/versions/$RUBY_VERSION/openssl/lib64; ln -s /usr/local/rbenv/versions/$RUBY_VERSION/openssl/lib64 /usr/local/rbenv/versions/$RUBY_VERSION/openssl/lib
+RUN export PATH="/root/.cargo/bin:$PATH"; RUBY_CONFIGURE_OPTS='--disable-shared --disable-install-doc' rbenv install $RUBY_VERSION --verbose
 RUN rbenv global $RUBY_VERSION
 # Test if it worked
 RUN ruby -v --yjit
