@@ -1,0 +1,97 @@
+ARG PYTHON_VERSION=3.11
+
+FROM python:$PYTHON_VERSION-slim-bullseye
+LABEL AI Arena <staff@aiarena.net>
+
+USER root
+WORKDIR /root/
+
+# Update system
+RUN apt-get update \
+    && apt-get upgrade --assume-yes --quiet=2 \
+    && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
+    gnupg2 \
+    wget \
+    git \
+    procps \
+    # Required to build wheels of some packages on new python versions
+    g++ \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install protoc
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v23.2/protoc-23.2-linux-x86_32.zip && \
+    unzip protoc-23.2-linux-x86_32.zip -d protoc3 && \
+    mv protoc3/bin/* /usr/bin/ && \
+    mv protoc3/include/* /usr/include/ && \
+    rm -rf protoc*
+
+# Install Zulu Repo for openjdk-17
+
+RUN mkdir -p /usr/share/man/man1 && \
+    wget -q -O - http://repos.azulsystems.com/RPM-GPG-KEY-azulsystems | tee /etc/apt/trusted.gpg.d/zulu.asc \
+    && echo 'deb http://repos.azulsystems.com/debian stable main'  > /etc/apt/sources.list.d/zulu.list \
+    && apt-get update \
+    # Install Zulu for Java 17
+    && wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
+    && apt-get install --no-install-recommends --assume-yes ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
+    && rm ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Prepare NET installation
+ADD https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb packages-microsoft-prod.deb
+
+RUN dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    # Add NET runtimes
+    && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 \
+    # Install ML.NET
+    && dotnet tool install -g mlnet-linux-x64 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install nodejs
+RUN wget -qO- https://deb.nodesource.com/setup_16.x | bash - \ 
+    && apt install --assume-yes --no-install-recommends --no-show-upgraded nodejs
+
+# Add local pyproject.toml and poetry.lock which contain bot requirements
+COPY pyproject.toml poetry.lock ./
+
+# # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
+RUN pip install --upgrade --no-cache-dir pip && \ 
+    pip install --no-cache-dir poetry \
+    # Allows the final remove virtual env command
+    && poetry config virtualenvs.in-project true \
+    # Export unified requirements as requirements.txt, this will not include dev dependencies
+    && poetry export -f requirements.txt --output requirements.txt --without-hashes \
+    # Remove virtual environment and uninstall poetry
+    && pip uninstall -y poetry \
+    && rm -rf /root/.venv \
+    # Install requirements.txt globally
+    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt \
+    && pip install --force-reinstall protobuf \
+    && pip uninstall -y s2clientprotocol \
+    # Remove cache created by poetry and pip
+    && rm -rf /root/.cache \
+    && rm -rf poetry.lock \
+    && rm -rf pyproject.toml.lock \
+    && rm -rf requirements.txt.lock
+
+
+RUN git clone https://github.com/Blizzard/s2client-proto.git && \ 
+    cd s2client-proto && \
+    python setup.py install && \
+    cd .. \
+    && rm -rf s2client-proto
+
+RUN apt remove --yes wget \
+    unzip \
+    gnupg2 \
+    software-properties-common\ 
+    g++ && apt autoremove --yes \
+    && rm -rf /var/lib/apt/lists/*
+
+
