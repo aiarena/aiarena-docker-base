@@ -15,12 +15,13 @@ gem  "thor", "1.3.0"
 # Support for C binding or Rust extensions
 gem "rb_sys", "0.9.82"
 # Image processing helpers for map geometry
-gem "ruby-vips", "~> 2.2.0"
+gem "ruby-vips", "2.2.0"
 # Numpy port for matrices and linear algebra
 gem "numo-narray", "0.9.2.1"
 gem "numo-linalg", "0.1.7"
 # Geometry
 gem "perfect-shape", "1.0.8"
+gem "kdtree", "0.4"
 
 # Sqlite ORM if your counter tables are a data lake
 gem "activerecord", "7.1.1"
