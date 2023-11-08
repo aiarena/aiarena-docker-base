@@ -1,11 +1,12 @@
-# Bot Dockerfile changes:
-## General:
+# 2023-05-15
+## Bot Dockerfile changes:
+### General:
 - Added ffmpeg, libsm6, libxext6 system packages
-## .NET:
+### .NET:
 - Added ML.NET
-## Python:
+### Python:
 - Updated to Python 3.11
-## Python libraries
+### Python libraries
 - **aiohttp "^3.7.4" -> "^3.8.4"**
 - attrs = "^21.4.0" -> "^23.1.0"
 - burnysc2 = "^6.0.0" -> "^6.2.0"
