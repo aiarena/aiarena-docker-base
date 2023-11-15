@@ -1,4 +1,21 @@
-# 2023-05-15
+# 2023-11-15 (v0.4.0)
+## SC2 Dockerfile changes:
+### General:
+- Upgraded base image to Debian Bookworm
+## Bot Dockerfile changes:
+### General:
+- Upgraded base image to Debian Bookworm
+### .NET:
+- Added .NET 8
+- Removed .NET 6
+### Python:
+
+### Python libraries
+- No breaking changes
+### NodeJS:
+- Upgraded to v18
+
+# 2023-05-15 (v0.3.0)
 ## Bot Dockerfile changes:
 ### General:
 - Added ffmpeg, libsm6, libxext6 system packages

@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.11
 
-FROM python:$PYTHON_VERSION-slim-bullseye
+FROM python:$PYTHON_VERSION-slim-bookworm
 LABEL AI Arena <staff@aiarena.net>
 
 USER root
@@ -48,13 +48,13 @@ RUN dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
     # Add NET runtimes
-    && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 \
+    && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 \
     # Install ML.NET
     && dotnet tool install -g mlnet-linux-x64 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install nodejs
-RUN wget -qO- https://deb.nodesource.com/setup_16.x | bash - \ 
+RUN wget -qO- https://deb.nodesource.com/setup_18.x | bash - \ 
     && apt install --assume-yes --no-install-recommends --no-show-upgraded nodejs
 
 # Add local pyproject.toml and poetry.lock which contain bot requirements
