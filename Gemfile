@@ -21,6 +21,7 @@ gem "numo-linalg", "0.1.7"
 # Geometry
 gem "perfect-shape", "1.0.8"
 gem "kdtree", "0.4"
+gem "rumale", "0.28.0"
 
 # Sqlite ORM if your counter tables are a data lake
 gem "activerecord", "7.1.1"
