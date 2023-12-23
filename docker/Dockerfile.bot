@@ -11,7 +11,9 @@ RUN apt-get update \
     && apt-get upgrade --assume-yes --quiet=2 \
     && apt-get install --assume-yes --no-install-recommends --no-show-upgraded \
     gnupg2 \
+    ca-certificates \
     wget \
+    curl \
     git \
     procps \
     # Required to build wheels of some packages on new python versions
@@ -54,8 +56,12 @@ RUN dpkg -i packages-microsoft-prod.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install nodejs
-RUN wget -qO- https://deb.nodesource.com/setup_16.x | bash - \ 
-    && apt install --assume-yes --no-install-recommends --no-show-upgraded nodejs
+RUN mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && NODE_MAJOR=16 \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install nodejs -y
 
 # Add local pyproject.toml and poetry.lock which contain bot requirements
 COPY pyproject.toml poetry.lock ./
@@ -90,6 +96,7 @@ RUN git clone https://github.com/Blizzard/s2client-proto.git && \
 RUN apt remove --yes wget \
     unzip \
     gnupg2 \
+    curl \
     software-properties-common\ 
     g++ && apt autoremove --yes \
     && rm -rf /var/lib/apt/lists/*
