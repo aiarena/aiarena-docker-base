@@ -90,7 +90,7 @@ RUN git clone https://github.com/Blizzard/s2client-proto.git && \
 # Ruby: Install per https://github.com/fullstaq-ruby/server-edition#installation
 RUN apt-get update && apt install --assume-yes gnupg apt-transport-https ca-certificates curl build-essential
 # Linear algebra packages
-RUN apt install openblas liblapack3 liblapacke
+RUN apt install --assume-yes libblas3 liblapack3 liblapacke
 RUN echo "deb [Signed-By=/etc/apt/fullstaq-ruby.asc] https://apt.fullstaqruby.org debian-12 main" >> /etc/apt/sources.list.d/fullstaq-ruby.list
 RUN curl -SLfo /etc/apt/fullstaq-ruby.asc https://raw.githubusercontent.com/fullstaq-labs/fullstaq-ruby-server-edition/main/fullstaq-ruby.asc
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A9AF1C7C2ED65CC0 && apt-get update
