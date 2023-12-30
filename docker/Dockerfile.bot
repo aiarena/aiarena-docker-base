@@ -104,6 +104,7 @@ RUN ruby --version --yjit
 # Ruby: Add package manager and gems required by bot libs
 RUN gem install bundler
 COPY Gemfile ./
+COPY Gemfile.lock ./
 RUN bundle install
 # Cleanup
 RUN apt remove --yes build-essential
