@@ -29,17 +29,14 @@ RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v23.2/pro
     mv protoc3/include/* /usr/include/ && \
     rm -rf protoc*
 
-# Install Zulu Repo for openjdk-17
-
-RUN mkdir -p /usr/share/man/man1 && \
-    wget -q -O - http://repos.azulsystems.com/RPM-GPG-KEY-azulsystems | tee /etc/apt/trusted.gpg.d/zulu.asc \
-    && echo 'deb http://repos.azulsystems.com/debian stable main'  > /etc/apt/sources.list.d/zulu.list \
-    && apt-get update \
-    # Install Zulu for Java 17
-    && wget --quiet --show-progress --progress=bar:force https://cdn.azul.com/zulu/bin/zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
-    && apt-get install --no-install-recommends --assume-yes ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
-    && rm ./zulu17.36.13-ca-jre17.0.4-linux_amd64.deb \
-    && rm -rf /var/lib/apt/lists/*
+# Install Zulu openjdk-21
+# https://docs.azul.com/core/install/debian#install-from-azul-apt-repository
+RUN apt-get update
+RUN apt install --assume-yes gnupg ca-certificates curl
+RUN curl -s https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/azul.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/azul.gpg] https://repos.azul.com/zulu/deb stable main" | tee /etc/apt/sources.list.d/zulu.list
+RUN apt-get update
+RUN apt-get install --assume-yes zulu21-jdk
 
 # Prepare NET installation
 ADD https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb packages-microsoft-prod.deb
