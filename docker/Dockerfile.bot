@@ -47,7 +47,7 @@ RUN dpkg -i packages-microsoft-prod.deb \
     # Add NET runtimes
     && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 \
     # Install ML.NET
-    && dotnet tool install -g mlnet-linux-x64 \
+    && dotnet tool install -g mlnet-linux-x64 --version 16.15.1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install nodejs
