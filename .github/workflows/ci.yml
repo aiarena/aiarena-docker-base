@@ -10,7 +10,7 @@ on:
 
 # Version number of the docker images - increment when there are huge changes
 env:
-  BOT_VERSION: 'v0.5.0'
+  BOT_VERSION: 'v0.5.1'
   PYTHON_VERSION: '3.11'
   SC2_VERSION: '4.10'
 
