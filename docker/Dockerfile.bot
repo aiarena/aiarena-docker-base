@@ -39,13 +39,13 @@ RUN apt-get update
 RUN apt-get install --assume-yes zulu21-jdk
 
 # Prepare NET installation
-ADD https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb packages-microsoft-prod.deb
+ADD https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb packages-microsoft-prod.deb
 
 RUN dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
     # Add NET runtimes
-    && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 \
+    && apt-get install --no-install-recommends --assume-yes dotnet-runtime-6.0 dotnet-sdk-7.0 dotnet-sdk-8.0 dotnet-sdk-9.0 \
     # Install ML.NET
     && dotnet tool install -g mlnet-linux-x64 --version 16.15.1 \
     && rm -rf /var/lib/apt/lists/*
