@@ -2,6 +2,7 @@ name: Release docker images
 
 on:
   release:
+    types: [published]
     tags:
       - 'bot-v*'  # for bot image releases
       - 'sc2-v*'  # for sc2 image releases
