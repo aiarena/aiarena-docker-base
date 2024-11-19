@@ -13,3 +13,14 @@ services:
     build:
       context: ../
       dockerfile: ./docker/Dockerfile.bot
+  # For updating the poetry.lock file, based off the bot image
+  poetry-update:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile.bot
+    volumes:
+      - ../poetry.lock:/root/poetry.lock
+      - ../pyproject.toml:/root/pyproject.toml
+      - ../requirements_diff.py:/root/requirements_diff.py
+    working_dir: /root/
+    command: bash -c "pip install poetry && poetry export -f requirements.txt --output ./before.requirements.txt --without-hashes && poetry update && poetry export -f requirements.txt --output after.requirements.txt --without-hashes && python ./requirements_diff.py"
