@@ -38,30 +38,37 @@ jobs:
     timeout-minutes: 90
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Build and push bot image
-      if: needs.validate_tag.outputs.type == 'bot'
-      run: |
-        # Set version for docker-compose
-        export BOT_VERSION=${{ needs.validate_tag.outputs.version }}
-        
-        echo "Building and pushing bot image version ${BOT_VERSION}"
-        docker compose -f docker/docker-compose.yml build bot
-        docker compose -f docker/docker-compose.yml push bot
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push sc2 image
-      if: needs.validate_tag.outputs.type == 'sc2'
-      run: |
-        # Set version for docker-compose
-        export SC2_VERSION=${{ needs.validate_tag.outputs.version }}
-        
-        echo "Building and pushing sc2 image version ${SC2_VERSION}"
-        docker compose -f docker/docker-compose.yml build sc2
-        docker compose -f docker/docker-compose.yml push sc2
+      - name: Build and push bot image
+        run: |                                                        
+          export IMAGE_TYPE=${{ needs.validate_tag.outputs.type }}
+          export VERSION=${{ needs.validate_tag.outputs.version }} # Used in the docker-compose.yml file    
+          
+          echo "Building and pushing ${IMAGE_TYPE} image version ${VERSION}"                                                   
+          
+          # Build and push the image                                                                                           
+          docker compose -f docker/docker-compose.yml build ${IMAGE_TYPE} || {                                                 
+            echo "Error: Docker build failed"                                                                                  
+            exit 1                                                                                                             
+          }                                                                                                                    
+          
+          docker compose -f docker/docker-compose.yml push ${IMAGE_TYPE} || {                                                  
+            echo "Error: Docker push failed"                                                                                   
+            exit 1                                                                                                             
+          }                                                                                                                    
+          
+          # Verify the push was successful                                                                                     
+          docker pull aiarena/arenaclient-${IMAGE_TYPE}-base:${VERSION} || {                                                   
+            echo "Error: Unable to verify pushed image"                                                                        
+            exit 1                                                                                                             
+          }                                                                                                                    
+          
+          echo "Successfully built and pushed ${IMAGE_TYPE} image version ${VERSION}"
+
