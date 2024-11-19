@@ -48,7 +48,6 @@ jobs:
       run: |
         pip install -r requirements.txt
 
-  # As disk space is limited, the strategy is to build the squashed images, run tests on them, push them to docker hub, remove the images and build non-squashed images and push those
   build_docker_images:
     name: Build and test docker images
     runs-on: ${{ matrix.os }}
@@ -73,12 +72,4 @@ jobs:
     - name: Push versioned images
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
       run: BOT_VERSION="${{ env.BOT_VERSION }}" PYTHON_VERSION="${{ env.PYTHON_VERSION }}" SC2_VERSION="${{ env.SC2_VERSION }}" docker compose -f docker/docker-compose.yml push --ignore-push-failures
-
-    - name: "Build the latest docker-compose stack"
-      run: PYTHON_VERSION="${{ env.PYTHON_VERSION }}" docker compose -f docker/docker-compose.yml build bot
-
-    # - name: Push latest images
-    #   if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    #   run: BOT_VERSION="latest" PYTHON_VERSION="${{ env.PYTHON_VERSION }}" docker compose -f docker/docker-compose.yml push bot --ignore-push-failures
-  
 
