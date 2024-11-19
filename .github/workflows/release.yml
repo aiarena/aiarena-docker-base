@@ -1,0 +1,47 @@
+name: Release docker images
+
+on:
+  release:
+    types: [published]
+    tags:
+      - 'bot-v*'  # for bot image releases
+      - 'sc2-v*'  # for sc2 image releases
+
+jobs:
+  push_docker_images:
+    name: Push docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Set image type
+      id: image_type
+      run: |
+        if [[ ${{ github.event.release.tag_name }} == bot-v* ]]; then
+          echo "type=bot" >> $GITHUB_OUTPUT
+        elif [[ ${{ github.event.release.tag_name }} == sc2-v* ]]; then
+          echo "type=sc2" >> $GITHUB_OUTPUT
+        fi
+        echo "version=${GITHUB_REF#refs/tags/*/}" >> $GITHUB_OUTPUT
+
+    - name: "Build and push bot image"
+      if: steps.image_type.outputs.type == 'bot'
+      run: |
+        docker compose -f docker/docker-compose.yml build bot
+        BOT_VERSION="${{ steps.image_type.outputs.version }}" docker compose -f docker/docker-compose.yml push bot
+        docker compose -f docker/docker-compose.yml push bot
+
+    - name: "Build and push sc2 image"
+      if: steps.image_type.outputs.type == 'sc2'
+      run: |
+        docker compose -f docker/docker-compose.yml build sc2
+        SC2_VERSION="${{ steps.image_type.outputs.version }}" docker compose -f docker/docker-compose.yml push sc2
+        docker compose -f docker/docker-compose.yml push sc2
