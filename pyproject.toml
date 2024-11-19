@@ -47,7 +47,7 @@ theano = "^1.0.5"
 torch =  {version = "^2.0.1", source = "torch-cpu"}
 torch-optimizer = "^0.3.0"
 torchvision =  {version = "^0.15.0", source = "torch-cpu"}
-tqdm = "^4.64.0"
+tqdm = "^4.66.3"
 urllib3 = "^1.26.19"
 uvloop = "^0.17.0"
 virtualenv = "^20.23.0"
