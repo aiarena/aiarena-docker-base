@@ -8,8 +8,33 @@ on:
       - 'sc2-v*'  # for sc2 image releases
 
 jobs:
+  validate_tag:
+    name: Validate release tag
+    runs-on: ubuntu-latest
+    outputs:
+      type: ${{ steps.validate.outputs.type }}
+      version: ${{ steps.validate.outputs.version }}
+    steps:
+      - name: Validate tag format
+        id: validate
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          
+          # Validate tag format and extract type
+          if [[ $TAG =~ ^(bot|sc2)-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            TYPE=${BASH_REMATCH[1]}
+            VERSION=${TAG#*-v}
+            echo "Tag format is valid"
+            echo "type=${TYPE}" >> $GITHUB_OUTPUT
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "Error: Invalid tag format. Must be 'bot-v*.*.*' or 'sc2-v*.*.*'"
+            exit 1
+          fi
+
   push_docker_images:
     name: Push docker images
+    needs: validate_tag
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -22,26 +47,22 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     
-    - name: Set image type
-      id: image_type
+    - name: Build and push bot image
+      if: needs.validate_tag.outputs.type == 'bot'
       run: |
-        if [[ ${{ github.event.release.tag_name }} == bot-v* ]]; then
-          echo "type=bot" >> $GITHUB_OUTPUT
-        elif [[ ${{ github.event.release.tag_name }} == sc2-v* ]]; then
-          echo "type=sc2" >> $GITHUB_OUTPUT
-        fi
-        echo "version=${GITHUB_REF#refs/tags/*/}" >> $GITHUB_OUTPUT
-
-    - name: "Build and push bot image"
-      if: steps.image_type.outputs.type == 'bot'
-      run: |
+        # Set version for docker-compose
+        export BOT_VERSION=${{ needs.validate_tag.outputs.version }}
+        
+        echo "Building and pushing bot image version ${BOT_VERSION}"
         docker compose -f docker/docker-compose.yml build bot
-        BOT_VERSION="${{ steps.image_type.outputs.version }}" docker compose -f docker/docker-compose.yml push bot
         docker compose -f docker/docker-compose.yml push bot
 
-    - name: "Build and push sc2 image"
-      if: steps.image_type.outputs.type == 'sc2'
+    - name: Build and push sc2 image
+      if: needs.validate_tag.outputs.type == 'sc2'
       run: |
+        # Set version for docker-compose
+        export SC2_VERSION=${{ needs.validate_tag.outputs.version }}
+        
+        echo "Building and pushing sc2 image version ${SC2_VERSION}"
         docker compose -f docker/docker-compose.yml build sc2
-        SC2_VERSION="${{ steps.image_type.outputs.version }}" docker compose -f docker/docker-compose.yml push sc2
         docker compose -f docker/docker-compose.yml push sc2
