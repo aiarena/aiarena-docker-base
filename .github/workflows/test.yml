@@ -1,4 +1,4 @@
-name: Build and push docker images
+name: Test
 
 on: 
   push:
@@ -8,45 +8,11 @@ on:
     branches:
       - "master"
 
-# Version number of the docker images - increment when there are huge changes
 env:
-  BOT_VERSION: 'v0.5.4'
   PYTHON_VERSION: '3.11'
   SC2_VERSION: '4.10-bookworm'
 
 jobs:
-  run_pip_install:
-    name: Merge and install requirements.txt
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.9', '3.10', '3.11']
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install Poetry
-      run: |
-        python -m pip install poetry wheel
-        poetry config virtualenvs.in-project true
-
-    - name: Export requirements.txt
-      run: |
-        poetry export -f requirements.txt --output requirements.txt --without-hashes
-        pip uninstall -y poetry
-        rm -rf .venv
-
-    - name: Install requirements.txt via pip
-      run: |
-        pip install -r requirements.txt
 
   build_docker_images:
     name: Build and test docker images
