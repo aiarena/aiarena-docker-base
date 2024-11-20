@@ -8,10 +8,6 @@ on:
     branches:
       - "master"
 
-env:
-  PYTHON_VERSION: '3.11'
-  SC2_VERSION: '4.10-bookworm'
-
 jobs:
 
   build_docker_images:
@@ -27,5 +23,4 @@ jobs:
     - uses: actions/checkout@v2
     
     - name: "Build the docker-compose stack with version"
-      run: PYTHON_VERSION="${{ env.PYTHON_VERSION }}" SC2_VERSION="${{ env.SC2_VERSION }}" docker compose -f docker/docker-compose.yml build
-
+      run: docker compose -f docker/docker-compose.yml build
