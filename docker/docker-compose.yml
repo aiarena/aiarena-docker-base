@@ -23,4 +23,4 @@ services:
       - ../pyproject.toml:/root/pyproject.toml
       - ../requirements_diff.py:/root/requirements_diff.py
     working_dir: /root/
-    command: bash -c "pip install poetry && poetry export -f requirements.txt --output ./before.requirements.txt --without-hashes && poetry update && poetry export -f requirements.txt --output after.requirements.txt --without-hashes && python ./requirements_diff.py"
+    command: bash -c "pip install poetry && poetry update && poetry export -f requirements.txt --without-hashes"
