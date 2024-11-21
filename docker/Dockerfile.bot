@@ -20,6 +20,8 @@ RUN apt-get update \
     libsm6 \
     libxext6 \
     unzip \
+    # distutils is required by tensorflow-cpu on python 3.12
+    python3-distutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install protoc
@@ -58,7 +60,7 @@ RUN wget -qO- https://deb.nodesource.com/setup_18.x | bash - \
 COPY pyproject.toml poetry.lock ./
 
 # # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
-RUN pip install --upgrade --no-cache-dir pip && \ 
+RUN pip install --upgrade --no-cache-dir pip setuptools && \
     pip install --no-cache-dir poetry \
     # Allows the final remove virtual env command
     && poetry config virtualenvs.in-project true \
