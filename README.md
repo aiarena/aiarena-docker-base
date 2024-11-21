@@ -32,6 +32,7 @@ docker run -it aiarena/arenaclient-bot-base:${PREVIOUS_VERSION} bash -c "pip ins
 
 # This will build the bot image and then run `poetry update` which will update the `poetry.lock` file with the latest versions.
 # After running this, copy the requirements.txt content output from the console and save it to after.requirements.txt
+# Note: if you don't get the requirements.txt content output, it likely means something failed.
 docker compose -f docker/docker-compose.yml run --rm poetry-update
 
 # This will generate a report showing the changes made.
