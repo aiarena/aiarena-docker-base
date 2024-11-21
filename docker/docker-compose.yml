@@ -21,6 +21,5 @@ services:
     volumes:
       - ../poetry.lock:/root/poetry.lock
       - ../pyproject.toml:/root/pyproject.toml
-      - ../requirements_diff.py:/root/requirements_diff.py
     working_dir: /root/
     command: bash -c "pip install poetry && poetry update && poetry export -f requirements.txt --without-hashes"
