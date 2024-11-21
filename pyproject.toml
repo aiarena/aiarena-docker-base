@@ -5,11 +5,11 @@ description = ""
 authors = ["AI Arena <staff@aiarena.net>"]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.9,<3.12"
 aiohttp = "*"
 aiohttp-jinja2 = "*"
 attrs = "*"
-burnysc2 = ">=7"
+burnysc2 = ">=6.4.0"
 certifi = "*"
 future = "*"
 gym = "*"
@@ -40,7 +40,7 @@ scipy = "*"
 six = "*"
 sqlalchemy = "*"
 stable-baselines3 = "*"
-tensorflow-cpu = ">=2.18"
+tensorflow-cpu = "*"
 termcolor = "*"
 torch =  {version = "*", source = "torch-cpu"}
 torch-optimizer = "*"

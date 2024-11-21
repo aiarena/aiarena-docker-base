@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.12
+ARG PYTHON_VERSION=3.11
 
 FROM python:$PYTHON_VERSION-slim-bookworm
 LABEL AI Arena <staff@aiarena.net>
@@ -20,8 +20,6 @@ RUN apt-get update \
     libsm6 \
     libxext6 \
     unzip \
-    # distutils is required by tensorflow-cpu on python 3.12
-    python3-distutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install protoc
