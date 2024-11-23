@@ -23,7 +23,7 @@ jobs:
           # Validate tag format and extract type
           if [[ $TAG =~ ^(bot|sc2)-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             TYPE=${BASH_REMATCH[1]}
-            VERSION=${TAG#*-v}
+            VERSION=${TAG#*-}
             echo "Tag format is valid"
             echo "type=${TYPE}" >> $GITHUB_OUTPUT
             echo "version=${VERSION}" >> $GITHUB_OUTPUT
