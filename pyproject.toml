@@ -45,7 +45,6 @@ dependencies = [
     "termcolor",
     "torch",
     "torch-optimizer",
-    "torchvision",
     "tqdm",
     "urllib3",
     "uvloop",
