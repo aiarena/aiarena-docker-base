@@ -67,7 +67,9 @@ RUN pip install --upgrade --no-cache-dir pip && \
     && pip uninstall -y uv \
     && rm -rf /root/.venv \
     # Install requirements.txt globally
-    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt \
+    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu \
+    # Install torchvision
+    && pip --default-timeout=1000 install --no-cache-dir torchvision --index-url https://download.pytorch.org/whl/cpu \
     && pip install --force-reinstall protobuf \
     && pip uninstall -y s2clientprotocol \
     # Remove cache created by uv and pip
