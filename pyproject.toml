@@ -68,7 +68,3 @@ explicit = true
 [tool.uv.sources]
 torch = { index = "torch-cpu" }
 torchvision = { index = "torch-cpu" }
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"

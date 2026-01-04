@@ -13,13 +13,13 @@ services:
     build:
       context: ../
       dockerfile: ./docker/Dockerfile.bot
-  # For updating the poetry.lock file, based off the bot image
-  poetry-update:
+  # For updating the uv.lock file, based off the bot image
+  uv-update:
     build:
       context: ../
       dockerfile: ./docker/Dockerfile.bot
     volumes:
-      - ../poetry.lock:/root/poetry.lock
+      - ../uv.lock:/root/uv.lock
       - ../pyproject.toml:/root/pyproject.toml
     working_dir: /root/
-    command: bash -c "pip install poetry && poetry update && poetry export -f requirements.txt --without-hashes"
+    command: bash -c "pip install uv && uv sync && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt"
