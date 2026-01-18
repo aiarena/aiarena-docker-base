@@ -28,12 +28,12 @@ Then run the following command:
 # Report the previous requirements.txt file
 PREVIOUS_VERSION=v0.0.0  # the previous version arenaclient-bot-base image that we're comparing to
 # Take the requirements output from the console of the following command and save it to before.requirements.txt
-docker run -it aiarena/arenaclient-bot-base:${PREVIOUS_VERSION} bash -c "pip install poetry && poetry export -f requirements.txt --without-hashes"
+docker run -it aiarena/arenaclient-bot-base:${PREVIOUS_VERSION} bash -c "pip install uv && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt"
 
-# This will build the bot image and then run `poetry update` which will update the `poetry.lock` file with the latest versions.
+# This will build the bot image and then run `uv sync` which will update the `uv.lock` file with the latest versions.
 # After running this, copy the requirements.txt content output from the console and save it to after.requirements.txt
 # Note: if you don't get the requirements.txt content output, it likely means something failed.
-docker compose -f docker/docker-compose.yml run --rm --build poetry-update
+docker compose -f docker/docker-compose.yml run --rm --build uv-update
 
 # This will generate a report showing the changes made.
 python ./requirements_diff.py

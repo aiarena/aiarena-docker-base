@@ -1,68 +1,69 @@
-[tool.poetry]
+[project]
 name = "aiarena-docker"
 version = "0.1.0"
 description = ""
-authors = ["AI Arena <staff@aiarena.net>"]
+authors = [{ name = "AI Arena", email = "staff@aiarena.net" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "aiohttp",
+    "aiohttp-jinja2",
+    "attrs",
+    "burnysc2>=7.0.1",
+    "certifi",
+    "future",
+    "gym",
+    "h5py",
+    "imutils",
+    "jinja2",
+    "loguru",
+    "more-itertools",
+    "multidict",
+    "numpy",
+    "opencv-contrib-python",
+    "opencv-python",
+    "pandas",
+    "pipenv",
+    "portpicker",
+    "protobuf",
+    "psutil",
+    "pydantic",
+    "pygame",
+    "pyglet",
+    "pysc2",
+    "python-utils",
+    "pyyaml",
+    "requests",
+    "river",
+    "s2clientprotocol",
+    "scikit-image",
+    "scikit-learn",
+    "scipy",
+    "six",
+    "sqlalchemy",
+    "stable-baselines3",
+    "tensorflow-cpu>=2.14.1",
+    "termcolor",
+    "torch",
+    "torch-optimizer",
+    "tqdm",
+    "urllib3",
+    "uvloop",
+    "virtualenv",
+    "virtualenv-clone",
+    "websockets",
+    "yarl",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-aiohttp = "*"
-aiohttp-jinja2 = "*"
-attrs = "*"
-burnysc2 = ">=7.0.1"
-certifi = "*"
-future = "*"
-gym = "*"
-h5py = "*"
-imutils = "*"
-jinja2 = "*"
-loguru = "*"
-more-itertools = "*"
-multidict = "*"
-numpy = "*"
-opencv-contrib-python = "*"
-opencv-python = "*"
-pandas = "*"
-pipenv = "*"
-portpicker = "*"
-protobuf = "*"
-psutil = "*"
-pydantic = "*"
-pygame = "*"
-pyglet = "*"
-pysc2 = "*"
-python-utils = "*"
-pyyaml = "*"
-requests = "*"
-river = "*"
-s2clientprotocol = "*"
-scikit-image = "*"
-scikit-learn = "*"
-scipy = "*"
-six = "*"
-sqlalchemy = "*"
-stable-baselines3 = "*"
-tensorflow-cpu = ">=2.14.1"
-termcolor = "*"
-torch =  {version = "*", source = "torch-cpu"}
-torch-optimizer = "*"
-torchvision =  {version = "*", source = "torch-cpu"}
-tqdm = "*"
-urllib3 = "*"
-uvloop = "*"
-virtualenv = "*"
-virtualenv-clone = "*"
-websockets = "*"
-yarl = "*"
+[dependency-groups]
+dev = ["black"]
 
-[tool.poetry.group.dev.dependencies]
-black = "*"
+[tool.uv]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[[tool.uv.index]]
+name = "torch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
-[[tool.poetry.source]]
- name = "torch-cpu"
- url = "https://download.pytorch.org/whl/cpu"
- priority = "explicit"
+[tool.uv.sources]
+torch = { index = "torch-cpu" }
+torchvision = { index = "torch-cpu" }

@@ -54,26 +54,27 @@ RUN dpkg -i packages-microsoft-prod.deb \
 RUN wget -qO- https://deb.nodesource.com/setup_18.x | bash - \
     && apt install --assume-yes --no-install-recommends --no-show-upgraded nodejs
 
-# Add local pyproject.toml and poetry.lock which contain bot requirements
-COPY pyproject.toml poetry.lock ./
+# Add local pyproject.toml and uv.lock which contain bot requirements
+COPY pyproject.toml uv.lock ./
 
 # # Merge client and bot requirements into pyproject.toml, generate a requirements.txt and install the packages globally
 RUN pip install --upgrade --no-cache-dir pip && \
-    pip install --no-cache-dir "poetry<2.0.0" \
-    # Allows the final remove virtual env command
-    && poetry config virtualenvs.in-project true \
+    pip install --no-cache-dir uv \
+    # uv should not create any .venv during this process
     # Export unified requirements as requirements.txt, this will not include dev dependencies
-    && poetry export -f requirements.txt --output requirements.txt --without-hashes \
-    # Remove virtual environment and uninstall poetry
-    && pip uninstall -y poetry \
+    && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt \
+    # Remove virtual environment and uninstall uv
+    && pip uninstall -y uv \
     && rm -rf /root/.venv \
     # Install requirements.txt globally
-    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt \
+    && pip --default-timeout=1000 install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu \
+    # Install torchvision
+    && pip --default-timeout=1000 install --no-cache-dir torchvision --index-url https://download.pytorch.org/whl/cpu \
     && pip install --force-reinstall protobuf \
     && pip uninstall -y s2clientprotocol \
-    # Remove cache created by poetry and pip
+    # Remove cache created by uv and pip
     && rm -rf /root/.cache \
-    && rm -rf poetry.lock \
+    && rm -rf uv.lock \
     && rm -rf pyproject.toml.lock \
     && rm -rf requirements.txt.lock
 
