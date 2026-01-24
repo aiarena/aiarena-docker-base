@@ -38,3 +38,20 @@ docker compose -f docker/docker-compose.yml run --rm --build uv-update
 # This will generate a report showing the changes made.
 python ./requirements_diff.py
 ```
+
+### Performing a release
+
+First determine your release version.
+Prefix the release version with the image you want to release:
+- For the bot image release version, use "bot-" (e.g. bot-v0.8.0)
+- For the SC2 base image release version, use "sc2-" (e.g. sc2-v0.8.0)
+
+To perform a release of a new version of the bot image, follow these steps:
+1. In this GitHub repository, click on the "Releases" heading on the right side, then "Draft a new release".
+2. Click to select a tag, enter the version tag you want to create (e.g. bot-v0.8.0) and click "Create new tag" and confirm.
+3. Enter a title for the release (e.g. "Release bot-v0.8").
+4. Click "Generate release notes" to auto-generate the release notes, then edit them as needed.
+5. Click "Publish release". The GitHub Actions workflow will automatically build and push the new bot Docker images to Docker Hub.
+6. Consider whether bot authors need to know about any changes to the image (e.g. dependencies).
+
+Note: The reason for the prefix release version prefix (e.g. "bot-") is that the GitHub Actions workflow will use this prefix to determine which image to build and push.
