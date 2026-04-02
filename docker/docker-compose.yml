@@ -22,4 +22,4 @@ services:
       - ../uv.lock:/root/uv.lock
       - ../pyproject.toml:/root/pyproject.toml
     working_dir: /root/
-    command: bash -c "pip install uv && uv sync && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt"
+    command: bash -c "pip install uv && uv lock --upgrade && uv sync && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt"
