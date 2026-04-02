@@ -74,7 +74,6 @@ RUN pip install --upgrade --no-cache-dir pip && \
     && pip uninstall -y s2clientprotocol \
     # Remove cache created by uv and pip
     && rm -rf /root/.cache \
-    && rm -rf uv.lock \
     && rm -rf pyproject.toml.lock \
     && rm -rf requirements.txt.lock
 
