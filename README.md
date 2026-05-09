@@ -30,7 +30,8 @@ cd docker && docker compose build bot # Build the bot image
 # Take the requirements output from the console of the following command and save it to before.requirements.txt
 docker run -it aiarena/arenaclient-bot-base:latest bash -c "pip install uv && uv export --format requirements.txt --no-hashes --no-header --no-annotate --no-cache -o requirements.txt"
 
-# This will build the bot image and then run `uv sync` which will update the `uv.lock` file with the latest versions.
+# This will build the bot image and then run `uv lock --upgrade` + `uv sync` which will update `uv.lock`
+# to the latest versions allowed by pyproject.toml.
 # After running this, copy the requirements.txt content output from the console and save it to after.requirements.txt
 # Note: if you don't get the requirements.txt content output, it likely means something failed.
 docker compose -f docker/docker-compose.yml run --rm --build uv-update
